@@ -1,6 +1,5 @@
-import sqlite3 as sql
 import datetime as dt
-
+import sqlite3 as sql
 
 DB_NAME = "tg_bot.db"
 
@@ -57,6 +56,13 @@ def load_demo(db_name):
              release_date=dt.datetime.now(),
              short_abstract="Все про Excel")
 
+def init_load(db_name):
+    add_publisher(db_name, 'МИФ', 'https://www.mann-ivanov-ferber.ru/')
+    add_publisher(db_name, 'Альпина', 'https://alpinabook.ru')
+    add_publisher(db_name, 'Бомбора', 'https://bombora.ru')
+    add_publisher(db_name, 'Корпус', 'https://www.corpus.ru/')
+    add_publisher(db_name, 'Бумкнига', 'https://boomkniga.ru')
+
 
 def list_publishers(db_name):
     with sql.connect(db_name) as con:
@@ -94,7 +100,7 @@ def init_db(db_name=DB_NAME):
                     REFERENCES publisher (publisher_id)
                 )''')
     load_demo(db_name)
-
+    init_load(db_name)
 
 if __name__ == "__main__":
     init_db()
