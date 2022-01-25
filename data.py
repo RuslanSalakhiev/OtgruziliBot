@@ -69,8 +69,8 @@ def add_publisher(db_name, name, url=None):
 
 
 def load_demo(db_name):
-    add_publisher(db_name, "МИФ", "www.mann-ivanov-ferber.ru")
-    add_publisher(db_name, "Альпина", "https://alpinabook.ru")
+    add_publisher(db_name, "МИФ", "http://mann-ivanov-ferber.ru")
+    add_publisher(db_name, "Альпина", "http://alpinabook.ru")
     pub_mif = find_publisher(db_name, "МИФ")
     pub_alpina = find_publisher(db_name, "Альпина")
     add_book(db_name, title="Harry Potter", publisher_id=pub_mif['id'], author="J.K. Rowling",
