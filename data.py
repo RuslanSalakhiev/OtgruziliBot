@@ -31,6 +31,17 @@ def add_book(db_name, title, publisher_id, author, release_date,
                               image_path))
 
 
+def find_books(db_name, publisher_id=None):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        if publisher_id:
+            cur.execute("SELECT * FROM book WHERE book.publisher_id=:pub_id", {'pub_id': publisher_id})
+        else:
+            cur.execute("SELECT * FROM book")
+        return cur.fetchall()
+
+
 def find_publisher(db_name, publisher_name):
     with sql.connect(db_name) as con:
         cur = con.cursor().execute('''SELECT publisher_id, name, url FROM publisher WHERE name=:pub_name ''',
