@@ -63,7 +63,6 @@ def update_db(db_name, books):
     df = pd.DataFrame(data, columns=['title', 'book_url', 'author', 'image_url', 'short_abstract', 'full_abstract'])
     df.to_csv('data_mif.csv', encoding="utf-8-sig")
 
-
 def update_status(db_name, books):
     pass
 

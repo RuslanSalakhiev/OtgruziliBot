@@ -1,6 +1,6 @@
 import sqlite3 as sql
 import datetime as dt
-
+import urllib.parse as urlparse
 
 DB_NAME = "tg_bot.db"
 
@@ -31,12 +31,47 @@ def add_book(db_name, title, publisher_id, author, release_date,
                               image_path))
 
 
+def find_books(db_name, publisher_id=None):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        if publisher_id:
+            cur.execute("SELECT * FROM book WHERE book.publisher_id=:pub_id", {'pub_id': publisher_id})
+        else:
+            cur.execute("SELECT * FROM book")
+        return cur.fetchall()
+
+
 def find_publisher(db_name, publisher_name):
     with sql.connect(db_name) as con:
         cur = con.cursor().execute('''SELECT publisher_id, name, url FROM publisher WHERE name=:pub_name ''',
                                    {'pub_name': publisher_name})
         row = cur.fetchone()
-        return {'id': row[0], 'name': row[1], 'url': row[2]}
+        if row:
+            return {'id': row[0], 'name': row[1], 'url': row[2]}
+        else:
+            return None
+
+
+def find_publisher_by_url(db_name, url):
+    """Search for a publisher by the URL. The URL may be long and dirty, the function will extract the main part and
+    find the publisher, if exists.
+    :param db_name:
+    :param url: URL like https://www.mann-ivanov-ferber.ru/books/indijskie-mify/.
+    The scheme part 'http://' must be present.
+    :return: a dictionary with field 'id', 'name', 'url' if the publisher exists, None if not
+    """
+    url = urlparse.urlparse(url).netloc
+    with sql.connect(db_name) as con:
+        cur = con.cursor().execute('''SELECT publisher_id, name, url 
+                                    FROM publisher 
+                                    WHERE instr(url,:pub_url)>0''',
+                                   {'pub_url': url})
+        row = cur.fetchone()
+        if row:
+            return {'id': row[0], 'name': row[1], 'url': row[2]}
+        else:
+            return None
 
 
 def add_publisher(db_name, name, url=None):
@@ -45,17 +80,27 @@ def add_publisher(db_name, name, url=None):
 
 
 def load_demo(db_name):
-    add_publisher(db_name, "Magic Publishing", "www.heaven-pub.com")
-    add_publisher(db_name, "Boring Ltd.", "www.hell.com")
-    pub_magic = find_publisher(db_name, "Magic Publishing")
-    pub_boring = find_publisher(db_name, "Boring Ltd.")
-    add_book(db_name, title="Harry Potter", publisher_id=pub_magic['id'], author="J.K. Rowling",
+    add_publisher(db_name, "МИФ", "http://mann-ivanov-ferber.ru")
+    add_publisher(db_name, "Альпина", "http://alpinabook.ru")
+    pub_mif = find_publisher(db_name, "МИФ")
+    pub_alpina = find_publisher(db_name, "Альпина")
+    add_book(db_name, title="Harry Potter", publisher_id=pub_mif['id'], author="J.K. Rowling",
              release_date=dt.datetime.now(),
              short_abstract="Книга о мальчике-волшебнике",
              long_abstract="Мальчик попадает в школу волшебства Хогвартс и учится колдовать")
-    add_book(db_name, title="1000 секретов Excel", publisher_id=pub_boring['id'], author="С.К. Иванов",
+    add_book(db_name, title="Управление в условиях кризиса: Как выжить и стать сильнее",
+             publisher_id=pub_alpina['id'],
+             author="Ицхак Адизес",
              release_date=dt.datetime.now(),
-             short_abstract="Все про Excel")
+             short_abstract='''О том, как руководителям компаний и предпринимателям преодолеть кризис и стать сильнее
+    Какие условия диктует кризис и что нужно делать, чтобы он принес пользу
+    Написана признанным гуру менеджмента''',
+             long_abstract='''Пандемия COVID 19 выявила системные проблемы в организациях, работающих в самых разных сферах. Владельцы бизнесов и топ-менеджмент оказались перед необходимостью срочно перенастраивать ключевые процессы в условиях возросшей неопределенности. Но как пережить кризис и стать сильнее?
+
+Автор теории жизненных циклов компании и типологии руководителей доктор Ицхак Калдерон Адизес последние 50 лет консультирует руководителей крупнейших компаний мира и глав многих государств. Его книга посвящена кризисам и способам извлечения из них пользы.
+
+Кризисы обнажают структурные проблемы в организации, главной из которых доктор Адизес считает отсутствие слаженности, единства, общего видения. Его методика выхода из кризиса через интеграцию частей компании и бизнес-процессов поможет руководителям и предпринимателям сориентироваться в период турбулентности на рынках.''',
+             url="https://alpinabook.ru/catalog/book-upravlenie-v-usloviyakh-krizisa-kak-vizhit/")
 
 
 def list_publishers(db_name):
@@ -93,10 +138,12 @@ def init_db(db_name=DB_NAME):
                 FOREIGN KEY (publisher_id) 
                     REFERENCES publisher (publisher_id)
                 )''')
-    load_demo(db_name)
 
 
 if __name__ == "__main__":
     init_db()
+    load_demo(DB_NAME)
     list_publishers(DB_NAME)
     list_books(DB_NAME)
+    print(find_publisher_by_url(DB_NAME, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
+    print(find_publisher_by_url(DB_NAME, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
