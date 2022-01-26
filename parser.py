@@ -1,23 +1,18 @@
-import requests
-from selenium.webdriver import Chrome
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait as wait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
+from datetime import date
 from time import sleep
-import re
-import pandas as pd
 
+import requests
+from bs4 import BeautifulSoup
+
+from data import add_book, find_publisher
+
+DB_NAME = "tg_bot.db"
 
 def parse_mif():
     url = 'https://www.mann-ivanov-ferber.ru/books/new/'
 
     r = requests.get(url)
-
     catalog_xml = BeautifulSoup(r.text, 'lxml')
-
     books = catalog_xml.find('div', class_='c-page-new-best-soon m-new').find('div').findAll('div', class_='lego-book')
 
     data = []
@@ -41,27 +36,36 @@ def parse_mif():
 
             abstract_block = bookpage.find('div').find('div').findAll()
 
-            short_abstract = abstract_block[0].text
+            short_abstract = abstract_block[0].text.replace('\xa0','')
             full_abstract = ''
             for text_part in abstract_block:
-                full_abstract = full_abstract + text_part.text + '\n'
+                full_abstract = full_abstract + text_part.text.replace('\xa0','') + '\n'
 
-            data.append([title, book_url, author, image_url, short_abstract, full_abstract])
+            data.append([title, book_url, author, image_url, short_abstract, full_abstract,'МИФ'])
         except:
             pass
 
         sleep(2)
 
-    print('Всего - ', len(books), '.')
-    print('Обработано - ', len(data), '.')
+    return data
 
-    df = pd.DataFrame(data, columns=['title', 'book_url', 'author', 'image_url', 'short_abstract', 'full_abstract'])
-    df.to_csv('data_mif.csv', encoding="utf-8-sig")
+def update_db(db_name, books):
+    publisher_id = find_publisher(db_name,books[0][6]).get('id')
 
+    for book in books:
+        add_book(db_name,title=book[0],
+                 publisher_id=publisher_id,
+                 author=book[2],
+                 release_date=date.today(),
+                 short_abstract=book[4],
+                 long_abstract=book[5],
+                 url=book[1],
+                 image_path=book[3])
 
-def update_db():
+def update_status(db_name, books):
     pass
 
 if __name__ == '__main__':
-    parse_mif()
-
+    books = parse_mif()
+    update_db(DB_NAME,books)
+    list_books(DB_NAME)
