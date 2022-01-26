@@ -51,7 +51,6 @@ def parse_mif():
 
 def update_db(db_name, books):
     publisher_id = find_publisher(db_name,books[0][6]).get('id')
-
     for book in books:
         add_book(db_name,title=book[0],
                  publisher_id=publisher_id,
@@ -61,6 +60,8 @@ def update_db(db_name, books):
                  long_abstract=book[5],
                  url=book[1],
                  image_path=book[3])
+    df = pd.DataFrame(data, columns=['title', 'book_url', 'author', 'image_url', 'short_abstract', 'full_abstract'])
+    df.to_csv('data_mif.csv', encoding="utf-8-sig")
 
 def update_status(db_name, books):
     pass
