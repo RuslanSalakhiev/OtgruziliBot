@@ -17,9 +17,14 @@ async def logo(message: types.Message):
 async def logo(message: types.Message):
     await message.answer('За какой период показать новинки?')
 
-@dp.message_handler(commands=['logo'])
+@dp.message_handler(commands=['subscribe'])
 async def logo(message: types.Message):
     await message.answer_photo('https://res.cloudinary.com/dk-hub/images/q_70,c_limit,h_580,w_440,f_auto/dk-core-nonprod/9780241470992/9780241470992_cover.jpg/dk_Dinosaurs_and_Other_Prehistoric_Life')
+
+@dp.message_handler(commands=['Unsubscribe'])
+async def logo(message: types.Message):
+    await message.answer_photo('https://res.cloudinary.com/dk-hub/images/q_70,c_limit,h_580,w_440,f_auto/dk-core-nonprod/9780241470992/9780241470992_cover.jpg/dk_Dinosaurs_and_Other_Prehistoric_Life')
+
 
 @dp.message_handler()
 async def echo(message: types.Message):
