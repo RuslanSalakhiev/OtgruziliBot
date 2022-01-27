@@ -5,11 +5,12 @@ import urllib.parse as urlparse
 DB_NAME = "tg_bot.db"
 
 
-def add_book(db_name, title, publisher_id, author, release_date,
+def add_book(db_name, title, publisher_id, author=None, release_date=None,
              short_abstract=None, long_abstract=None,
              url=None,
              image_path=None):
-
+    if not release_date:
+        release_date = dt.datetime.now()
     with sql.connect(db_name) as con:
         con.cursor().execute('''INSERT INTO book(
                             publisher_id, 
@@ -40,6 +41,14 @@ def find_books(db_name, publisher_id=None):
         else:
             cur.execute("SELECT * FROM book")
         return cur.fetchall()
+
+
+def find_book(db_name, url):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        cur.execute("SELECT * FROM book WHERE book.url=:book_url", {'book_url': url})
+        return cur.fetchone()
 
 
 def find_publisher(db_name, publisher_name):
@@ -101,6 +110,14 @@ def load_demo(db_name):
 
 Кризисы обнажают структурные проблемы в организации, главной из которых доктор Адизес считает отсутствие слаженности, единства, общего видения. Его методика выхода из кризиса через интеграцию частей компании и бизнес-процессов поможет руководителям и предпринимателям сориентироваться в период турбулентности на рынках.''',
              url="https://alpinabook.ru/catalog/book-upravlenie-v-usloviyakh-krizisa-kak-vizhit/")
+    add_book(db_name, title="Кто мы такие? Гены, наше тело, общество",
+             publisher_id=pub_alpina['id'],
+             author="Роберт Сапольски",
+             release_date=dt.datetime.now(),
+             short_abstract="",
+             long_abstract="",
+             url="https://alpinabook.ru/catalog/book-kto-my-takie/"
+             )
 
 
 def list_publishers(db_name):
@@ -133,7 +150,7 @@ def init_db(db_name=DB_NAME):
                 release_date TEXT, 
                 short_abstract TEXT, 
                 long_absract TEXT,
-                url TEXT,
+                url TEXT UNIQUE,
                 image_path TEXT,
                 FOREIGN KEY (publisher_id) 
                     REFERENCES publisher (publisher_id)
