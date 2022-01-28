@@ -1,15 +1,15 @@
 import sqlite3 as sql
 import datetime as dt
 import urllib.parse as urlparse
+import config
 
-DB_NAME = "tg_bot.db"
 
-
-def add_book(db_name, title, publisher_id, author, release_date,
+def add_book(db_name, title, publisher_id, author=None, release_date=None,
              short_abstract=None, long_abstract=None,
              url=None,
              image_path=None):
-
+    if not release_date:
+        release_date = dt.datetime.now()
     with sql.connect(db_name) as con:
         con.cursor().execute('''INSERT INTO book(
                             publisher_id, 
@@ -31,15 +31,50 @@ def add_book(db_name, title, publisher_id, author, release_date,
                               image_path))
 
 
-def find_books(db_name, publisher_id=None):
+def find_books(db_name, publisher_id=None,
+               title=None, author=None,
+               from_date=None, to_date=None):
+    """Returns all book which meets the given parameters.
+    If all parameters are None, all books in the database are returned.
+    :param db_name:
+    :param publisher_id:
+    :param title:
+    :param author:
+    :param from_date: the condition is from_date<=release_date<to_date
+    :param to_date:
+    :return: a sequence of sqlite3.Row dict-like entries
+    """
+    def build_query():
+        query = "SELECT * FROM book"
+        vals = build_values()
+        if vals:
+            query += " WHERE"
+            parts = [f" {k}=:{k}" for k in vals if k not in {'from_date', 'to_date'}]
+            parts += [" release_date>=:from_date"] if from_date else []
+            parts += [" release_date<:to_date"] if to_date else []
+            query += " AND".join(parts)
+        return query
+
+    def build_values():
+        val = {'publisher_id': publisher_id, 'title': title, 'author': author,
+               'from_date': from_date, 'to_date': to_date}
+        return dict({(k, v) for k, v in val.items() if v})
+
     with sql.connect(db_name) as con:
         con.row_factory = sql.Row
         cur = con.cursor()
-        if publisher_id:
-            cur.execute("SELECT * FROM book WHERE book.publisher_id=:pub_id", {'pub_id': publisher_id})
-        else:
-            cur.execute("SELECT * FROM book")
+        q = build_query()
+        v = build_values()
+        cur.execute(q, v)
         return cur.fetchall()
+
+
+def find_book(db_name, url):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        cur.execute("SELECT * FROM book WHERE book.url=:book_url", {'book_url': url})
+        return cur.fetchone()
 
 
 def find_publisher(db_name, publisher_name):
@@ -85,13 +120,13 @@ def load_demo(db_name):
     pub_mif = find_publisher(db_name, "МИФ")
     pub_alpina = find_publisher(db_name, "Альпина")
     add_book(db_name, title="Harry Potter", publisher_id=pub_mif['id'], author="J.K. Rowling",
-             release_date=dt.datetime.now(),
+             release_date=dt.datetime.fromisoformat("2022-01-25 12:10:45"),
              short_abstract="Книга о мальчике-волшебнике",
              long_abstract="Мальчик попадает в школу волшебства Хогвартс и учится колдовать")
     add_book(db_name, title="Управление в условиях кризиса: Как выжить и стать сильнее",
              publisher_id=pub_alpina['id'],
              author="Ицхак Адизес",
-             release_date=dt.datetime.now(),
+             release_date=dt.datetime.fromisoformat("2022-01-27 18:30:00"),
              short_abstract='''О том, как руководителям компаний и предпринимателям преодолеть кризис и стать сильнее
     Какие условия диктует кризис и что нужно делать, чтобы он принес пользу
     Написана признанным гуру менеджмента''',
@@ -101,21 +136,35 @@ def load_demo(db_name):
 
 Кризисы обнажают структурные проблемы в организации, главной из которых доктор Адизес считает отсутствие слаженности, единства, общего видения. Его методика выхода из кризиса через интеграцию частей компании и бизнес-процессов поможет руководителям и предпринимателям сориентироваться в период турбулентности на рынках.''',
              url="https://alpinabook.ru/catalog/book-upravlenie-v-usloviyakh-krizisa-kak-vizhit/")
+    add_book(db_name, title="Кто мы такие? Гены, наше тело, общество",
+             publisher_id=pub_alpina['id'],
+             author="Роберт Сапольски",
+             release_date=dt.datetime.fromisoformat("2022-01-26 08:35:16"),
+             short_abstract="",
+             long_abstract="",
+             url="https://alpinabook.ru/catalog/book-kto-my-takie/"
+             )
 
 
-def list_publishers(db_name):
+def print_publishers(db_name):
     with sql.connect(db_name) as con:
         for row in con.cursor().execute('''SELECT * FROM publisher'''):
             print(row)
 
 
-def list_books(db_name):
+def get_all_publishers(db_name):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        return con.cursor().execute('''SELECT * FROM publisher''')
+
+
+def print_books(db_name):
     with sql.connect(db_name) as con:
         for row in con.cursor().execute('''SELECT * FROM book'''):
             print(row)
 
 
-def init_db(db_name=DB_NAME):
+def init_db(db_name):
     with sql.connect(db_name) as con:
         cur = con.cursor()
         cur.execute('''PRAGMA foreign_keys = ON''')
@@ -133,7 +182,7 @@ def init_db(db_name=DB_NAME):
                 release_date TEXT, 
                 short_abstract TEXT, 
                 long_absract TEXT,
-                url TEXT,
+                url TEXT UNIQUE,
                 image_path TEXT,
                 FOREIGN KEY (publisher_id) 
                     REFERENCES publisher (publisher_id)
@@ -141,9 +190,9 @@ def init_db(db_name=DB_NAME):
 
 
 if __name__ == "__main__":
-    init_db()
-    load_demo(DB_NAME)
-    list_publishers(DB_NAME)
-    list_books(DB_NAME)
-    print(find_publisher_by_url(DB_NAME, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
-    print(find_publisher_by_url(DB_NAME, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
+    init_db(config.db_name)
+    load_demo(config.db_name)
+    print_publishers(config.db_name)
+    print_books(config.db_name)
+    # print(find_publisher_by_url(config.db_name, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
+    # print(find_publisher_by_url(config.db_name, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
