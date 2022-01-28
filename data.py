@@ -1,9 +1,7 @@
 import sqlite3 as sql
 import datetime as dt
 import urllib.parse as urlparse
-
-
-DB_NAME = "tg_bot.db"
+import config
 
 
 def add_book(db_name, title, publisher_id, author=None, release_date=None,
@@ -148,19 +146,25 @@ def load_demo(db_name):
              )
 
 
-def list_publishers(db_name):
+def print_publishers(db_name):
     with sql.connect(db_name) as con:
         for row in con.cursor().execute('''SELECT * FROM publisher'''):
             print(row)
 
 
-def list_books(db_name):
+def get_all_publishers(db_name):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        return con.cursor().execute('''SELECT * FROM publisher''')
+
+
+def print_books(db_name):
     with sql.connect(db_name) as con:
         for row in con.cursor().execute('''SELECT * FROM book'''):
             print(row)
 
 
-def init_db(db_name=DB_NAME):
+def init_db(db_name):
     with sql.connect(db_name) as con:
         cur = con.cursor()
         cur.execute('''PRAGMA foreign_keys = ON''')
@@ -186,9 +190,9 @@ def init_db(db_name=DB_NAME):
 
 
 if __name__ == "__main__":
-    init_db()
-    load_demo(DB_NAME)
-    list_publishers(DB_NAME)
-    list_books(DB_NAME)
-    print(find_publisher_by_url(DB_NAME, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
-    print(find_publisher_by_url(DB_NAME, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
+    init_db(config.db_name)
+    load_demo(config.db_name)
+    print_publishers(config.db_name)
+    print_books(config.db_name)
+    # print(find_publisher_by_url(config.db_name, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
+    # print(find_publisher_by_url(config.db_name, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
