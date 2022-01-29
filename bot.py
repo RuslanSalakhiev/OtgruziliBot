@@ -3,13 +3,13 @@ import datetime as dt
 import os.path
 
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-import data
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
 # imports token, db_name
 import config
+import data
 
 # log_file = os.path.join(config.log_dir, "bot.log")
 # logging.basicConfig(level=logging.INFO, filename=log_file)
@@ -96,4 +96,3 @@ async def echo(message: types.Message):
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-

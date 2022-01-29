@@ -4,9 +4,8 @@ from time import sleep
 import requests
 from bs4 import BeautifulSoup
 
-from data import add_book, find_publisher
+from data import add_book, find_publisher, find_book
 
-DB_NAME = "tg_bot.db"
 
 def parse_mif():
     url = 'https://www.mann-ivanov-ferber.ru/books/new/'
@@ -51,22 +50,25 @@ def parse_mif():
 
 def update_db(db_name, books):
     publisher_id = find_publisher(db_name,books[0][6]).get('id')
+    update_count = 0
     for book in books:
-        add_book(db_name,title=book[0],
-                 publisher_id=publisher_id,
-                 author=book[2],
-                 release_date=date.today(),
-                 short_abstract=book[4],
-                 long_abstract=book[5],
-                 url=book[1],
-                 image_path=book[3])
-    df = pd.DataFrame(data, columns=['title', 'book_url', 'author', 'image_url', 'short_abstract', 'full_abstract'])
-    df.to_csv('data_mif.csv', encoding="utf-8-sig")
+       if find_book(db_name, book[1]) is None:
+            add_book(db_name,title=book[0],
+                     publisher_id=publisher_id,
+                     author=book[2],
+                     release_date=date.today(),
+                     short_abstract=book[4],
+                     long_abstract=book[5],
+                     url=book[1],
+                     image_path=book[3])
+            update_count += 1
+    return update_count
+
 
 def update_status(db_name, books):
     pass
 
 if __name__ == '__main__':
     books = parse_mif()
-    update_db(DB_NAME,books)
-    list_books(DB_NAME)
+    update_count = update_db(config.db_name, books)
+    print(update_count)
