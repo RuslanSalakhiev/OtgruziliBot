@@ -1,11 +1,11 @@
 from datetime import date
 from time import sleep
-
 import requests
 from bs4 import BeautifulSoup
 
 from data import add_book, find_publisher, find_book
-
+import config
+from bot import send_to_channel
 
 def parse_mif():
     url = 'https://www.mann-ivanov-ferber.ru/books/new/'
