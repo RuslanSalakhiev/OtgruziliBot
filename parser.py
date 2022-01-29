@@ -46,10 +46,10 @@ def parse_mif():
 
         sleep(2)
 
-    return data
+    return data, len(data), len(books)
 
-def update_db(db_name, books):
-    publisher_id = find_publisher(db_name,books[0][6]).get('id')
+def update_db(db_name, books,publisher_name):
+    publisher_id = find_publisher(db_name,publisher_name).get('id')
     update_count = 0
     for book in books:
        if find_book(db_name, book[1]) is None:
@@ -69,6 +69,13 @@ def update_status(db_name, books):
     pass
 
 if __name__ == '__main__':
-    books = parse_mif()
-    update_count = update_db(config.db_name, books)
-    print(update_count)
+    today = date.today().strftime("%d/%m")
+
+    # Парсинг МИФа
+    books, success,total = parse_mif()
+    publisher_name = books[0][6]
+    update_count = update_db(config.db_name, books, publisher_name)
+    text = str(f"{today}. \n<b>{publisher_name}</b>. Парсер {success}/{total}. Запись в БД: {update_count}")
+
+    # Отправка статистики в канал
+    send_to_channel(text)
