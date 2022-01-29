@@ -15,7 +15,7 @@ import data
 # logging.basicConfig(level=logging.INFO, filename=log_file)
 logging.basicConfig(level=logging.INFO)
 storage = MemoryStorage()
-bot = Bot(token=config.token)
+bot = Bot(token=config.token, parse_mode= types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=storage)
 
 
@@ -24,6 +24,14 @@ class Dialog(StatesGroup):
     main = State('main')  # The main dialog
     news = State('news')  # Appears after \Whatsnews command
 
+def send_to_channel(text:str):
+    executor.start(dp, main(text))
+
+async def main(text:str):
+    await send_message(config.chat_id, text)
+
+async def send_message(channel_id: int, text: str):
+    await bot.send_message(channel_id, text)
 
 @dp.message_handler(commands=['Start'], state='*')
 async def process_start(message: types.Message):
