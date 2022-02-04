@@ -182,18 +182,19 @@ def check_status(parsed,to_parse, total,update_count):
     status = 'ок' if total > 0 and to_parse == parsed and parsed == update_count else 'alarm!!!'
     return status
 
-if __name__ == '__main__':
-    today = date.today().strftime("%d/%m")
 
+today = date.today().strftime("%d/%m")
+status_message = f"{today}\nСайт(All/New)→ Парсер → БД :статус\n"
+
+if __name__ == '__main__':
     # Парсинг МИФа
     publisher_name = 'МИФ'
     books, parsed,to_parse, total  = parse_mif(config.db_name, publisher_name)
     update_count = update_db(config.db_name, books, publisher_name)
     status = check_status(parsed,to_parse, total,update_count)
+    publisher_name = "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
 
-    text = str(f"{today}\n<b>{publisher_name}:</b> Парсер: {total}/{to_parse}/{parsed}. БД: {update_count} --- {status}")
-    # Отправка статистики в канал
-    send_to_channel(text)
 
     # Парсинг Корпуса
     publisher_name = 'Corpus'
@@ -201,10 +202,9 @@ if __name__ == '__main__':
     books, parsed,to_parse, total  = parse_corpus(config.db_name, publisher_name)
     update_count = update_db(config.db_name, books, publisher_name)
     status = check_status(parsed,to_parse, total,update_count)
+    publisher_name = "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
 
-    text = str(f"{today}\n<b>{publisher_name}:</b> Парсер: {total}/{to_parse}/{parsed}. БД: {update_count} --- {status}")
-    # Отправка статистики в канал
-    send_to_channel(text)
 
     # Парсинг Бумкнига
     publisher_name = 'Бумкнига'
@@ -213,8 +213,9 @@ if __name__ == '__main__':
 
     update_count = update_db(config.db_name, books, publisher_name)
     status = check_status(parsed,to_parse, total,update_count)
+    publisher_name= "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"# Отправка статистики в канал
 
-    text = str(f"{today}\n<b>{publisher_name}:</b> Парсер: {total}/{to_parse}/{parsed}. БД: {update_count} --- {status}")
-    # Отправка статистики в канал
 
-    send_to_channel(text)
+    #Статистика в канал
+    send_to_channel(status_message)
