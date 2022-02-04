@@ -3,7 +3,7 @@ from time import sleep
 import requests
 from bs4 import BeautifulSoup
 
-from data import add_book, find_publisher, find_book, add_publisher,print_books
+from data import add_book, find_publisher, find_book, add_publisher,print_books,get_all_publishers
 import config
 from bot import send_to_channel
 
@@ -151,13 +151,11 @@ def parse_boom(db_name, publisher_name):
     return data, len(data), to_parse, len(books)
 
 
-def update_db(db_name, books, publisher_name):
+def update_db(db_name, books, publisher_id):
     update_count = 0
 
     if books == []:   # Проверяю отдает ли что-то парсер
         return update_count
-
-    publisher_id = find_publisher(db_name,publisher_name).get('id')
 
     for book in books:
         try:
@@ -175,47 +173,44 @@ def update_db(db_name, books, publisher_name):
     return update_count
 
 
-def update_status(db_name, books):
-    pass
 
-def check_status(parsed,to_parse, total,update_count):
+def check_status(parsed,to_parse, total,update_count, status_message, publisher_name):
+    # выравнивание длины строки
+    print_publisher = "{:<12}".format(publisher_name)
+
     status = 'ок' if total > 0 and to_parse == parsed and parsed == update_count else 'alarm!!!'
-    return status
+
+    status_message = status_message + f"<b>{print_publisher}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
+
+    return status_message
+
+def parser_selector(db_name, publisher_name):
+    #  выбор нужного парсера
+    if publisher_name == 'МИФ':
+        return parse_mif(config.db_name, publisher_name)
+    elif publisher_name == 'Corpus':
+        return parse_corpus(config.db_name, publisher_name)
+    elif publisher_name == 'Бумкнига':
+        return parse_boom(config.db_name, publisher_name)
+    else:
+        return [],0,0,0
 
 
 today = date.today().strftime("%d/%m")
-status_message = f"{today}\nСайт(All/New)→ Парсер → БД :статус\n"
+status_message = f"{today}\nСайт(All/New)→ Парсер → БД\n"
 
 if __name__ == '__main__':
-    # Парсинг МИФа
-    publisher_name = 'МИФ'
-    books, parsed,to_parse, total  = parse_mif(config.db_name, publisher_name)
-    update_count = update_db(config.db_name, books, publisher_name)
-    status = check_status(parsed,to_parse, total,update_count)
-    publisher_name = "{:<12}".format(publisher_name)
-    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
 
+    #add_publisher(config.db_name, 'Corpus')  #вручную добавить паблишера
 
-    # Парсинг Корпуса
-    publisher_name = 'Corpus'
+    publisher_list = [{ 'name':p['name'], 'publisher_id':p['publisher_id']} for p in get_all_publishers(config.db_name)]
 
-    books, parsed,to_parse, total  = parse_corpus(config.db_name, publisher_name)
-    update_count = update_db(config.db_name, books, publisher_name)
-    status = check_status(parsed,to_parse, total,update_count)
-    publisher_name = "{:<12}".format(publisher_name)
-    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
-
-
-    # Парсинг Бумкнига
-    publisher_name = 'Бумкнига'
-
-    books, parsed,to_parse, total  = parse_boom(config.db_name, publisher_name)
-
-    update_count = update_db(config.db_name, books, publisher_name)
-    status = check_status(parsed,to_parse, total,update_count)
-    publisher_name= "{:<12}".format(publisher_name)
-    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"# Отправка статистики в канал
-
-
-    #Статистика в канал
+    for publisher in publisher_list:
+        # парсинг
+        books, parsed,to_parse, total  = parser_selector(config.db_name,publisher['name'])
+        # добавление в бд
+        update_count = update_db(config.db_name, books,publisher['name'] )
+        # формирование сообщения
+        status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher['name'])
+    #отправка в бот
     send_to_channel(status_message)
