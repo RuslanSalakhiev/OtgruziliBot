@@ -151,13 +151,11 @@ def parse_boom(db_name, publisher_name):
     return data, len(data), to_parse, len(books)
 
 
-def update_db(db_name, books, publisher_name):
+def update_db(db_name, books, publisher_id):
     update_count = 0
 
     if books == []:   # Проверяю отдает ли что-то парсер
         return update_count
-
-    publisher_id = find_publisher(db_name,publisher_name).get('id')
 
     for book in books:
         try:
@@ -199,15 +197,20 @@ def parser_selector(db_name, publisher_name):
 
 
 today = date.today().strftime("%d/%m")
-status_message = f"{today}\nСайт(All/New)→ Парсер → БД :статус\n"
+status_message = f"{today}\nСайт(All/New)→ Парсер → БД\n"
 
 if __name__ == '__main__':
-    for publisher in get_all_publishers(config.db_name):
+
+    #add_publisher(config.db_name, 'Corpus')  #вручную добавить паблишера
+
+    publisher_list = [{ 'name':p['name'], 'publisher_id':p['publisher_id']} for p in get_all_publishers(config.db_name)]
+
+    for publisher in publisher_list:
         # парсинг
-        books, parsed,to_parse, total  = parser_selector(config.db_name,publisher[1])
+        books, parsed,to_parse, total  = parser_selector(config.db_name,publisher['name'])
         # добавление в бд
-        update_count = update_db(config.db_name, books,publisher[1] )
+        update_count = update_db(config.db_name, books,publisher['name'] )
         # формирование сообщения
-        status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher[1])
+        status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher['name'])
     #отправка в бот
     send_to_channel(status_message)
