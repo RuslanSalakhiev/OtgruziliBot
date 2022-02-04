@@ -3,7 +3,7 @@ from time import sleep
 import requests
 from bs4 import BeautifulSoup
 
-from data import add_book, find_publisher, find_book, add_publisher,print_books,get_all_publishers
+from data import add_book, find_publisher, find_book, add_publisher,print_books
 import config
 from bot import send_to_channel
 
@@ -175,39 +175,47 @@ def update_db(db_name, books, publisher_name):
     return update_count
 
 
+def update_status(db_name, books):
+    pass
 
-def check_status(parsed,to_parse, total,update_count, status_message, publisher_name):
-    # выравнивание длины строки
-    print_publisher = "{:<12}".format(publisher_name)
-
+def check_status(parsed,to_parse, total,update_count):
     status = 'ок' if total > 0 and to_parse == parsed and parsed == update_count else 'alarm!!!'
-
-    status_message = status_message + f"<b>{print_publisher}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
-
-    return status_message
-
-def parser_selector(db_name, publisher_name):
-    #  выбор нужного парсера
-    if publisher_name == 'МИФ':
-        return parse_mif(config.db_name, publisher_name)
-    elif publisher_name == 'Corpus':
-        return parse_corpus(config.db_name, publisher_name)
-    elif publisher_name == 'Бумкнига':
-        return parse_boom(config.db_name, publisher_name)
-    else:
-        return [],0,0,0
+    return status
 
 
 today = date.today().strftime("%d/%m")
 status_message = f"{today}\nСайт(All/New)→ Парсер → БД :статус\n"
 
 if __name__ == '__main__':
-    for publisher in get_all_publishers(config.db_name):
-        # парсинг
-        books, parsed,to_parse, total  = parser_selector(config.db_name,publisher[1])
-        # добавление в бд
-        update_count = update_db(config.db_name, books,publisher[1] )
-        # формирование сообщения
-        status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher[1])
-    #отправка в бот
+    # Парсинг МИФа
+    publisher_name = 'МИФ'
+    books, parsed,to_parse, total  = parse_mif(config.db_name, publisher_name)
+    update_count = update_db(config.db_name, books, publisher_name)
+    status = check_status(parsed,to_parse, total,update_count)
+    publisher_name = "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
+
+
+    # Парсинг Корпуса
+    publisher_name = 'Corpus'
+
+    books, parsed,to_parse, total  = parse_corpus(config.db_name, publisher_name)
+    update_count = update_db(config.db_name, books, publisher_name)
+    status = check_status(parsed,to_parse, total,update_count)
+    publisher_name = "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
+
+
+    # Парсинг Бумкнига
+    publisher_name = 'Бумкнига'
+
+    books, parsed,to_parse, total  = parse_boom(config.db_name, publisher_name)
+
+    update_count = update_db(config.db_name, books, publisher_name)
+    status = check_status(parsed,to_parse, total,update_count)
+    publisher_name= "{:<12}".format(publisher_name)
+    status_message = status_message + f"<b>{publisher_name}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"# Отправка статистики в канал
+
+
+    #Статистика в канал
     send_to_channel(status_message)
