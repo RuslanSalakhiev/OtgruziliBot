@@ -3,4 +3,4 @@ venv
 config.py
 *.db
 log/*
-
+parsing/*
