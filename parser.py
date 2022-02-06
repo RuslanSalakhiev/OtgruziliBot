@@ -209,7 +209,7 @@ if __name__ == '__main__':
         # парсинг
         books, parsed,to_parse, total  = parser_selector(config.db_name,publisher['name'])
         # добавление в бд
-        update_count = update_db(config.db_name, books,publisher['name'] )
+        update_count = update_db(config.db_name, books,publisher['publisher_id'] )
         # формирование сообщения
         status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher['name'])
     #отправка в бот
