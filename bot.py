@@ -137,7 +137,8 @@ async def process_subscribe_period(message: types.Message):
         return
     # add subscription to database
     await Dialog.main.set()
-    await message.answer(f"Вы подписаны на издательство {Subscribe.current_publisher}",
+    await message.answer(f"Вы, {message.from_user.username}, id={message.from_user.id} \
+                        подписаны на издательство {Subscribe.current_publisher}",
                          reply_markup=types.ReplyKeyboardRemove())
     Subscribe.current_publisher = None
 

@@ -25,6 +25,8 @@ class DBTestCase(unittest.TestCase):
             self.assertIsNone(cur.fetchone())
             cur.execute("SELECT * FROM book")
             self.assertIsNone(cur.fetchone())
+            cur.execute("SELECT * FROM subscription")
+            self.assertIsNone(cur.fetchone())
 
     def test_find_publisher(self):
         data.load_demo(self.test_db_name)
