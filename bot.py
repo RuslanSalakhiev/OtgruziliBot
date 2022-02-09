@@ -6,11 +6,11 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters import Text
 
 # imports token, db_name
 import config
-import data
-
+from data import get_all_publishers, find_books
 # log_file = os.path.join(config.log_dir, "bot.log")
 # logging.basicConfig(level=logging.INFO, filename=log_file)
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +18,84 @@ storage = MemoryStorage()
 bot = Bot(token=config.token, parse_mode= types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=storage)
 
+# Переменная для счетчика книг
+countr = {}
 
-# States
-class Dialog(StatesGroup):
-    main = State('main')  # The main dialog
-    news = State('news')  # Appears after \Whatsnews command
+# whatsnew states
+class Whatsnew(StatesGroup):
+    select_period = State()
+    select_publisher = State()
+    select_next_book = State()
 
+
+##### Whatsnew #####
+@dp.message_handler(commands=['Whatsnew'], state=None)
+async def start(message: types.Message):
+	await Whatsnew.select_period.set()
+	await message.reply('За какой период посмотрим новинки?')
+
+@dp.message_handler(lambda message: message.text not in {'7', '30'}, state=Whatsnew.select_period)
+async def process_invalid_time(message: types.Message):
+    await message.answer('Неправильный период ¯\_(ツ)_/¯. Либо 7, либо 30')
+
+@dp.message_handler(state=Whatsnew.select_period)
+async def period(message: types.Message, state:FSMContext):
+    async with state.proxy() as data:
+        data['period'] = message.text
+    await Whatsnew.next()
+
+    publisher_list = [{'name': p['name'], 'publisher_id': p['publisher_id']} for p in get_all_publishers(config.db_name)]
+    all_publishers = []
+    for i in publisher_list:
+        all_publishers.append(i['name'])
+    all_publishers_str = ", ".join(all_publishers)
+    await message.reply(f"Теперь выбери издательство: {all_publishers_str}")
+
+@dp.message_handler(lambda message: message.text not in {'МИФ', 'Альпина', 'Corpus', 'Бумкнига'}, state=Whatsnew.select_publisher)
+async def process_invalid_time(message: types.Message):
+    await message.answer('Неправильное издательство ¯\_(ツ)_/¯')
+
+@dp.message_handler(state=Whatsnew.select_publisher)
+async def publisher(message: types.Message, state:FSMContext):
+    async with state.proxy() as data:
+        data['publisher'] = message.text
+        data['count_books'] = len(find_books(config.db_name, publisher_id='1', from_date= '2022-01-03'))
+        data['book_counter'] = 0
+
+    await message.reply(f" В {data['publisher']} за {data['period']} дней вышло {data['count_books']} книг\n Давай их посмотрим?", reply_markup=next_keyboard())
+    countr[message.from_user.id] = data['count_books']-1
+
+    await Whatsnew.next()
+
+async def show_book(message: types.Message, book_value: int):
+    await message.reply(f'''
+    {find_books(config.db_name, publisher_id='1',from_date='2022-02-03')[book_value][2]}    
+    {find_books(config.db_name, publisher_id='1',from_date='2022-02-03')[book_value][7]} 
+    {find_books(config.db_name, publisher_id='1',from_date='2022-02-03')[book_value][8]} 
+    {find_books(config.db_name, publisher_id='1',from_date='2022-02-03')[book_value][5]} 
+    ''', reply_markup=next_keyboard())
+
+def next_keyboard():
+    buttons = [
+        types.InlineKeyboardButton(text="Дальше", callback_data="count_incr"),
+        types.InlineKeyboardButton(text="Назад", callback_data="count_decr"),
+    ]
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    keyboard.add(*buttons)
+    return keyboard
+
+@dp.callback_query_handler(Text(startswith="count_"), state = '*') #поправить на конкретный стейт
+async def counter(call: types.CallbackQuery):
+    if call.data == 'count_incr':
+        countr[call.from_user.id]-=1
+        await show_book(call.message, countr[call.from_user.id])
+    elif call.data == 'count_decr':
+        countr[call.from_user.id]+=1
+        await show_book(call.message, countr[call.from_user.id])
+    await call.answer()
+
+
+#### Статистика в канал ######
 def send_to_channel(text:str):
     executor.start(dp, main(text))
 
@@ -32,6 +104,8 @@ async def main(text:str):
 
 async def send_message(channel_id: int, text: str):
     await bot.send_message(channel_id, text)
+
+#### Общие хэндлеры ######
 
 @dp.message_handler(commands=['Start'], state='*')
 async def process_start(message: types.Message):
@@ -49,38 +123,7 @@ async def process_help(message: types.Message):
                          /Unsubscribe - отписаться от издательства
                          /help - инструкция по работе с ботом''')
 
-
-@dp.message_handler(commands=['Whatsnew'], state='*')
-async def process_whatsnew(message: types.Message):
-    # Configure ReplyKeyboardMarkup
-    # print(f"Current state: {dp.get_current().current_state()}")
-    await Dialog.news.set()
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add("Неделя", "Месяц")
-    await message.answer('За какой период показать новинки?',
-                         reply_markup=markup)
-
-
-@dp.message_handler(lambda message: message.text not in {'Неделя', 'Месяц'}, state=Dialog.news)
-async def process_invalid_time(message: types.Message):
-    await message.answer('Не правильный период.')
-
-
-@dp.message_handler(lambda message: message.text in {'Неделя', 'Месяц'}, state=Dialog.news)
-async def process_news_time(message: types.Message):
-    def books_info(books):
-        text = "\n".join([b['author'] + " " + b['title'] for b in books])
-        return text
-    markup = types.ReplyKeyboardRemove()
-    if message.text == 'Неделя':
-        from_date = dt.datetime.now() - dt.timedelta(days=7)
-    else:  # message.text == 'Месяц':
-        from_date = dt.datetime.now() - dt.timedelta(days=30)
-    to_date = dt.datetime.now()
-    book_text = books_info(data.find_books(config.db_name, from_date=from_date, to_date=to_date))
-    await Dialog.main.set()
-    await message.answer(book_text, reply_markup=markup)
-
+#### Subscribe ######
 
 @dp.message_handler(commands=['subscribe'])
 async def process_subscribe(message: types.Message):
@@ -91,11 +134,7 @@ async def process_subscribe(message: types.Message):
     await message.answer('На какое издательство подписаться?',
                          reply_markup=markup)
 
-
-@dp.message_handler(commands=['logo'])
-async def logo(message: types.Message):
-    await message.answer_photo('https://res.cloudinary.com/dk-hub/images/q_70,c_limit,h_580,w_440,f_auto/dk-core-nonprod/9780241470992/9780241470992_cover.jpg/dk_Dinosaurs_and_Other_Prehistoric_Life')
-
+#### Echo
 
 @dp.message_handler()
 async def echo(message: types.Message):
