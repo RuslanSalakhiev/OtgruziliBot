@@ -42,10 +42,10 @@ def parse_mif(db_name, publisher_name):
 
                 abstract_block = bookpage.find('div').find('div').findAll()
 
-                short_abstract = abstract_block[0].text.replace('\xa0','')
+                short_abstract = abstract_block[0].text
                 full_abstract = ''
                 for text_part in abstract_block:
-                    full_abstract = full_abstract + text_part.text.replace('\xa0','') + '\n'
+                    full_abstract = full_abstract + text_part.text + '\n'
 
                 data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
             except:
@@ -85,11 +85,11 @@ def parse_corpus(db_name, publisher_name):
 
                 abstract_block = bookpage_xml.find('div', class_='rowBlockText').findAll()
 
-                short_abstract = abstract_block[0].text.replace('\xa0','')
+                short_abstract = abstract_block[0].text
 
                 full_abstract = ''
                 for text_part in abstract_block:
-                    full_abstract = full_abstract + text_part.text.replace('\xa0','') + '\n'
+                    full_abstract = full_abstract + text_part.text + '\n'
 
 
                 data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
@@ -137,10 +137,10 @@ def parse_boom(db_name, publisher_name):
                 author = ','.join(author_list)
 
                 abstract_block = bookpage_xml.find('div', class_='woocommerce-Tabs-panel').findAll('p')
-                short_abstract = abstract_block[1].text.replace('\xa0','')
+                short_abstract = abstract_block[1].text
                 full_abstract = ''
                 for text_part in abstract_block:
-                    full_abstract = full_abstract + text_part.text.replace('\xa0','') + '\n'
+                    full_abstract = full_abstract + text_part.text + '\n'
                 data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
 
             except:
