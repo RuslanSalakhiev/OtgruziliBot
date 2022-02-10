@@ -128,14 +128,15 @@ async def process_subscribe_publishers(message: types.Message):
 @dp.message_handler(state=Subscribe.period)
 async def process_subscribe_period(message: types.Message):
     if message.text.lower() in {"раз в месяц", "месяц"}:
-        period = "month"
+        period = "0 10 1 * *"
     elif message.text.lower() in {"раз в неделю", "неделя"}:
-        period = "week"
+        period = period = "0 10 * * 1"
     else:
         await message.answer('Выбран неверный период, допустимые значения: \
                              раз в месяц, раз в неделю')
         return
     # add subscription to database
+    data.add_subscription(config.db_name, message.from_user.id, Subscribe.current_publisher, period)
     await Dialog.main.set()
     await message.answer(f"Вы, {message.from_user.username}, id={message.from_user.id} \
                         подписаны на издательство {Subscribe.current_publisher}",

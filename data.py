@@ -188,7 +188,7 @@ def add_subscription(db_name, tg_user_id, publisher_name, cron_str):
 def create_tbl_subscription(db_name):
     with sql.connect(db_name) as con:
         # cron_str is like:
-        # minute hour day_of_month day_of_week
+        # minute hour day_of_month month day_of_week
         # https://crontab.guru/
         con.cursor().execute('''CREATE TABLE IF NOT EXISTS subscription (
                             tg_user_id INTEGER NOT NULL,
