@@ -2,6 +2,17 @@ import sqlite3 as sql
 import datetime as dt
 import urllib.parse as urlparse
 import config
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="The module creates and manages the database for OtgruziliBot. \
+                                    Usage: \n \
+                                        python data.py db_name")
+    parser.add_argument("--loaddemo", action="store_true", help="Load demo data into the created database")
+    parser.add_argument("--upgrade", action="store_true", help="Creates subscription table for the given database")
+    parser.add_argument("db_name", help="The path to the database")
+    return parser.parse_args()
 
 
 def add_book(db_name, title, publisher_id, author=None, release_date=None,
@@ -164,17 +175,43 @@ def print_books(db_name):
             print(row)
 
 
+def add_subscription(db_name, tg_user_id, publisher_name, cron_str):
+    pub_id = find_publisher(db_name, publisher_name)['id']
+    with sql.connect(db_name) as con:
+        con.cursor().execute('''INSERT OR REPLACE INTO 
+                            subscription(tg_user_id, publisher_id, cron_str)
+                            VALUES(:tgid, :pub_id, :str)
+                            ''',
+                             {'tgid': tg_user_id,
+                              'pub_id': pub_id,
+                              'str': cron_str})
+
+
+def create_tbl_subscription(db_name):
+    with sql.connect(db_name) as con:
+        # cron_str is like:
+        # minute hour day_of_month month day_of_week
+        # https://crontab.guru/
+        con.cursor().execute('''CREATE TABLE IF NOT EXISTS subscription (
+                            tg_user_id INTEGER NOT NULL,
+                            publisher_id INTEGER NOT NULL,
+                            cron_str TEXT NOT NULL, 
+                            FOREIGN KEY (publisher_id) 
+                                REFERENCES publisher (publisher_id),
+                            PRIMARY KEY (tg_user_id, publisher_id))''')
+
+
 def init_db(db_name):
     with sql.connect(db_name) as con:
         cur = con.cursor()
         cur.execute('''PRAGMA foreign_keys = ON''')
         cur.execute('''PRAGMA encoding = "UTF-8"''')
-        cur.execute('''CREATE TABLE publisher (
+        cur.execute('''CREATE TABLE IF NOT EXISTS publisher (
                 publisher_id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL UNIQUE,
                 url TEXT)
                 ''')
-        cur.execute('''CREATE TABLE book ( 
+        cur.execute('''CREATE TABLE IF NOT EXISTS book ( 
                 book_id INTEGER PRIMARY KEY,
                 publisher_id INTEGER NOT NULL,
                 title TEXT NOT NULL, 
@@ -187,12 +224,23 @@ def init_db(db_name):
                 FOREIGN KEY (publisher_id) 
                     REFERENCES publisher (publisher_id)
                 )''')
+    create_tbl_subscription(db_name)
 
 
 if __name__ == "__main__":
-    init_db(config.db_name)
-    load_demo(config.db_name)
-    print_publishers(config.db_name)
-    print_books(config.db_name)
+    args = get_args()
+    if args.upgrade:
+        create_tbl_subscription(args.db_name)
+        print(f"Subscription table was created for the database {args.db_name}")
+    else:
+        init_db(args.db_name)
+        print(f"Database was created at {args.db_name}")
+    if args.loaddemo:
+        load_demo(args.db_name)
+        print("Demo data is loaded:")
+        print(f"{get_all_publishers(args.db_name)} publishers, {find_books(args.db_name)} books")
+
+    # print_publishers(config.db_name)
+    # print_books(config.db_name)
     # print(find_publisher_by_url(config.db_name, "https://www.mann-ivanov-ferber.ru/books/indijskie-mify/"))
     # print(find_publisher_by_url(config.db_name, "https://www.mann-AAivanov-ferber.ru/books/indijskie-mify/"))
