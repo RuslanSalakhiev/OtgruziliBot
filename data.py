@@ -176,13 +176,15 @@ def print_books(db_name):
 
 
 def add_subscription(db_name, tg_user_id, publisher_name, cron_str):
+    pub_id = find_publisher(db_name, publisher_name)['id']
     with sql.connect(db_name) as con:
         con.cursor().execute('''INSERT OR REPLACE INTO 
                             subscription(tg_user_id, publisher_id, cron_str)
-                            VALUES(?, 
-                            SELECT publisher_id FROM publisher WHERE name=?, 
-                            ?)
-                            ''', (tg_user_id, publisher_name, cron_str))
+                            VALUES(:tgid, :pub_id, :str)
+                            ''',
+                             {'tgid': tg_user_id,
+                              'pub_id': pub_id,
+                              'str': cron_str})
 
 
 def create_tbl_subscription(db_name):

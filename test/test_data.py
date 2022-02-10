@@ -1,3 +1,4 @@
+import sqlite3
 import unittest
 import data
 import sqlite3 as sql
@@ -93,6 +94,14 @@ class DBTestCase(unittest.TestCase):
         # test duplicate url
         self.assertRaises(sql.DatabaseError, data.add_book, *[self.test_db_name, BOOK_TITLE, mif_pub['id']],
                           **{'author': BOOK_AUTHOR, 'url': BOOK_URL})
+
+    def test_add_subscription(self):
+        data.load_demo(self.test_db_name)
+        publisher_name = data.get_all_publishers(self.test_db_name).fetchone()['name']
+        test_user_id = 123456
+        data.add_subscription(self.test_db_name, test_user_id, publisher_name, "0 10 * * 1")
+        cur = sqlite3.connect(self.test_db_name).cursor().execute("SELECT * FROM subscription")
+        self.assertIsNotNone(cur.fetchone())
 
 
 if __name__ == '__main__':
