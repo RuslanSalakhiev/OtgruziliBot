@@ -9,8 +9,8 @@ def get_args():
     parser = argparse.ArgumentParser(description="The module creates and manages the database for OtgruziliBot. \
                                     Usage: \n \
                                         python data.py db_name")
-    parser.add_argument("--loaddemo", default=False, help="Load demo data into the created database")
-    parser.add_argument("--upgrade", default=False, help="Creates subscription table for the given database")
+    parser.add_argument("--loaddemo", action="store_true", help="Load demo data into the created database")
+    parser.add_argument("--upgrade", action="store_true", help="Creates subscription table for the given database")
     parser.add_argument("db_name", help="The path to the database")
     return parser.parse_args()
 
