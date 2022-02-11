@@ -3,7 +3,11 @@ import datetime as dt
 import urllib.parse as urlparse
 import config
 import argparse
+from collections import namedtuple
 
+Book = namedtuple('Book',
+                  ['book_id', 'publisher_id', 'title', 'author',
+                   'release_date', 'short_abstract', 'long_absract', 'url', 'image_path'])
 
 def get_args():
     parser = argparse.ArgumentParser(description="The module creates and manages the database for OtgruziliBot. \
@@ -77,7 +81,7 @@ def find_books(db_name, publisher_id=None,
         q = build_query()
         v = build_values()
         cur.execute(q, v)
-        return cur.fetchall()
+        return [b._asdict() for b in map(Book._make, cur.fetchall())]
 
 
 def find_book(db_name, url):
@@ -88,13 +92,16 @@ def find_book(db_name, url):
         return cur.fetchone()
 
 
+def _row_to_publisher(row):
+    return {'id': row[0], 'name': row[1], 'url': row[2]}
+
 def find_publisher(db_name, publisher_name):
     with sql.connect(db_name) as con:
         cur = con.cursor().execute('''SELECT publisher_id, name, url FROM publisher WHERE name=:pub_name ''',
                                    {'pub_name': publisher_name})
         row = cur.fetchone()
         if row:
-            return {'id': row[0], 'name': row[1], 'url': row[2]}
+            return _row_to_publisher(row)
         else:
             return None
 
@@ -115,7 +122,7 @@ def find_publisher_by_url(db_name, url):
                                    {'pub_url': url})
         row = cur.fetchone()
         if row:
-            return {'id': row[0], 'name': row[1], 'url': row[2]}
+            return _row_to_publisher(row)
         else:
             return None
 
@@ -166,7 +173,7 @@ def print_publishers(db_name):
 def get_all_publishers(db_name):
     with sql.connect(db_name) as con:
         con.row_factory = sql.Row
-        return con.cursor().execute('''SELECT * FROM publisher''')
+        return [_row_to_publisher(row) for row in con.cursor().execute('''SELECT * FROM publisher''').fetchall()]
 
 
 def print_books(db_name):

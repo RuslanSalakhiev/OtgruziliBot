@@ -97,7 +97,7 @@ class DBTestCase(unittest.TestCase):
 
     def test_add_subscription(self):
         data.load_demo(self.test_db_name)
-        publisher_name = data.get_all_publishers(self.test_db_name).fetchone()['name']
+        publisher_name = data.get_all_publishers(self.test_db_name)[0]['name']
         test_user_id = 123456
         data.add_subscription(self.test_db_name, test_user_id, publisher_name, "0 10 * * 1")
         cur = sqlite3.connect(self.test_db_name).cursor().execute("SELECT * FROM subscription")
