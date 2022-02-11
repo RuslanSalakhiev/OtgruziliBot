@@ -6,10 +6,12 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters import Text
 
 # imports token, db_name
 import config
 import data
+import whatsnew
 
 # log_file = os.path.join(config.log_dir, "bot.log")
 # logging.basicConfig(level=logging.INFO, filename=log_file)
@@ -20,7 +22,7 @@ dp = Dispatcher(bot, storage=storage)
 
 
 # States
-class Dialog(StatesGroup):
+class Root(StatesGroup):
     main = State('main')  # The main dialog
     # /Whatsnew chain:
     # main -> /Whatsnew -> news -> Неделя/Месяц -> publisher -> МИФ/Альпина ->
@@ -40,6 +42,27 @@ class Subscribe(StatesGroup):
     current_publisher = None
 
 
+dp.register_message_handler(whatsnew.select_period,
+                            commands=['Whatsnew'],
+                            state='*')
+
+dp.register_message_handler(whatsnew.process_invalid_time,
+                            lambda message: message.text not in {'7', '30'},
+                            state=whatsnew.Whatsnew.select_period)
+
+dp.register_message_handler(whatsnew.process_correct_period,
+                            state=whatsnew.Whatsnew.select_period)
+
+dp.register_message_handler(whatsnew.process_invalid_publisher,
+                            lambda message: message.text not in {'МИФ', 'Альпина', 'Corpus', 'Бумкнига'},
+                            state=whatsnew.Whatsnew.select_publisher)
+
+dp.register_message_handler(whatsnew.process_correct_publisher,
+                            state=whatsnew.Whatsnew.select_publisher)
+
+dp.register_callback_query_handler(whatsnew.counter, Text(startswith="count_"),
+                                   state=whatsnew.Whatsnew.select_next_book)
+
 def send_to_channel(text: str):
     executor.start(dp, main(text))
 
@@ -54,14 +77,14 @@ async def send_message(channel_id: int, text: str):
 
 @dp.message_handler(commands=['Start'], state='*')
 async def process_start(message: types.Message):
-    await Dialog.main.set()
+    await Root.main.set()
     await message.answer('Привет, это бот книжных новинок. \
     Подпишись на новинки любимого издательства или посмотри какие книги недавно поступили в продажу')
 
 
 @dp.message_handler(commands=['Help'], state='*')
 async def process_help(message: types.Message):
-    await Dialog.main.set()
+    await Root.main.set()
     await message.answer('''Вот список команд:
                          /Whatsnew - получить список новинок
                          /Subscribe - подписаться на издательство
@@ -69,36 +92,20 @@ async def process_help(message: types.Message):
                          /help - инструкция по работе с ботом''')
 
 
-@dp.message_handler(commands=['Whatsnew'], state='*')
+# @dp.message_handler(commands=['Whatsnew'], state='*')
 async def process_whatsnew(message: types.Message):
     # Configure ReplyKeyboardMarkup
     # print(f"Current state: {dp.get_current().current_state()}")
-    await Dialog.news.set()
+    await Root.news.set()
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
     markup.add("Неделя", "Месяц")
     await message.answer('За какой период показать новинки?',
                          reply_markup=markup)
 
 
-@dp.message_handler(lambda message: message.text not in {'Неделя', 'Месяц'}, state=Dialog.news)
+# @dp.message_handler(lambda message: message.text not in {'Неделя', 'Месяц'}, state=Root.news)
 async def process_invalid_time(message: types.Message):
     await message.answer('Не правильный период.')
-
-
-@dp.message_handler(lambda message: message.text in {'Неделя', 'Месяц'}, state=Dialog.news)
-async def process_news_time(message: types.Message):
-    def books_info(books):
-        text = "\n".join([b['author'] + " " + b['title'] for b in books])
-        return text
-    markup = types.ReplyKeyboardRemove()
-    if message.text == 'Неделя':
-        from_date = dt.datetime.now() - dt.timedelta(days=7)
-    else:  # message.text == 'Месяц':
-        from_date = dt.datetime.now() - dt.timedelta(days=30)
-    to_date = dt.datetime.now()
-    book_text = books_info(data.find_books(config.db_name, from_date=from_date, to_date=to_date))
-    await Dialog.main.set()
-    await message.answer(book_text, reply_markup=markup)
 
 
 @dp.message_handler(commands=['subscribe'])
@@ -137,7 +144,7 @@ async def process_subscribe_period(message: types.Message):
         return
     # add subscription to database
     data.add_subscription(config.db_name, message.from_user.id, Subscribe.current_publisher, period)
-    await Dialog.main.set()
+    await Root.main.set()
     await message.answer(f"Вы, {message.from_user.username}, подписаны на издательство {Subscribe.current_publisher}",
                          reply_markup=types.ReplyKeyboardRemove())
     Subscribe.current_publisher = None
