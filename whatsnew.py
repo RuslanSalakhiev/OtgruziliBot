@@ -11,6 +11,8 @@ from aiogram.dispatcher.filters import Text
 # imports token, db_name
 import config
 from data import get_all_publishers, find_books, find_publisher
+from keyboards.kb_whatsnew import show_book_keyboard, select_period_keyboard, select_publisher_keyboard, book_mode_keyboard
+
 
 # log_file = os.path.join(config.log_dir, "bot.log")
 # logging.basicConfig(level=logging.INFO, filename=log_file)
@@ -20,107 +22,92 @@ bot = Bot(token=config.token, parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot, storage=storage)
 
 # Переменная для счетчика книг
-countr = {}
-
+whatsnew_period = {}
+whatsnew_publisher = {}
+whatsnew_counter = {}
+books_to_show = {}
 
 # whatsnew states
 class Whatsnew(StatesGroup):
     select_period = State()
     select_publisher = State()
-    select_next_book = State()
+    select_book_mode = State()
+    show_list_book = State()
+    show_single_book = State()
+
+async def delete_message(message: types.Message):
+    await message.delete()
 
 
-##### Whatsnew #####
-# @dp.message_handler(commands=['Whatsnew'], state=None)
-async def select_period(message: types.Message):
+async def select_period(call: types.CallbackQuery):
+    await delete_message(call.message)
     await Whatsnew.select_period.set()
-    await message.answer('За какой период посмотрим новинки? \n \
-                         Введи количество дней: 7 или 30')
+    await call.message.answer('За какой период посмотрим новинки?', reply_markup = select_period_keyboard())
+    await call.answer()
+
+async def select_publisher(call: types.CallbackQuery, state: FSMContext):
+    await delete_message(call.message)
+    whatsnew_period[call.from_user.id] = int(call.data)
+
+    await Whatsnew.select_publisher.set()
+
+    from_date = dt.datetime.now() - dt.timedelta(days=whatsnew_period[call.from_user.id])
+    # Сбор статистики по новинкам по издательствам
+    publisher_stats = [{'name': p['name'],'id': p['id'], 'newbooks': len(find_books(config.db_name, publisher_id=p['id'], from_date=from_date))} for p in get_all_publishers(config.db_name)]
+
+    await call.message.answer('Новинки какого издательства посмотрим?', reply_markup = select_publisher_keyboard(publishers=publisher_stats))
+    await call.answer()
 
 
-# @dp.message_handler(lambda message: message.text not in {'7', '30'}, state=Whatsnew.select_period)
-async def process_invalid_time(message: types.Message):
-    await message.answer('Неправильный период ¯\\_(ツ)_/¯. Либо 7, либо 30')
+# async def process_correct_publisher(message: types.Message, state: FSMContext):
+#     async with state.proxy() as data:
+#         data['publisher'] = find_publisher(config.db_name, message.text)
+#         from_date = dt.datetime.now() - dt.timedelta(days=data['period'])
+#         data['books'] = find_books(config.db_name, publisher_id=data['publisher']['id'], from_date=from_date)
+#         data['count_books'] = len(data['books'])
+#         data['book_counter'] = 0
+#
+#     await message.reply(f" В {data['publisher']['name']} за {data['period']} дней вышло {data['count_books']} книг\n \
+#                         Давай их посмотрим?", reply_markup=show_book_keyboard())
+#     whatsnew_data[message.from_user.id] = data['count_books'] - 1
+#     await Whatsnew.next()
 
 
-# @dp.message_handler(state=Whatsnew.select_period)
-async def process_correct_period(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['period'] = int(message.text)
-    await Whatsnew.next()
+async def book_mode(call: types.CallbackQuery):
+    await delete_message(call.message)
+    whatsnew_publisher[call.from_user.id] = call.data
+    await Whatsnew.select_book_mode.set()
+    await call.message.answer(f'Как показать книги?', reply_markup = book_mode_keyboard())
 
-    publisher_list = get_all_publishers(config.db_name)
-    all_publishers = []
-    for i in publisher_list:
-        all_publishers.append(i['name'])
-    all_publishers_str = ", ".join(all_publishers)
-    await message.reply(f"Теперь выбери издательство: {all_publishers_str}")
+    from_date = dt.datetime.now() - dt.timedelta(days=whatsnew_period[call.from_user.id])
+    books_to_show[call.from_user.id] = find_books(config.db_name, publisher_id=whatsnew_publisher[call.from_user.id], from_date=from_date)
+    whatsnew_counter[call.from_user.id] = 0
+    await call.answer()
 
-
-async def process_invalid_publisher(message: types.Message):
-    await message.answer('Неправильное издательство ¯\\_(ツ)_/¯')
-
-
-async def process_correct_publisher(message: types.Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['publisher'] = find_publisher(config.db_name, message.text)
-        from_date = dt.datetime.now() - dt.timedelta(days=data['period'])
-        data['books'] = find_books(config.db_name, publisher_id=data['publisher']['id'], from_date=from_date)
-        data['count_books'] = len(data['books'])
-        data['book_counter'] = 0
-
-    await message.reply(f" В {data['publisher']['name']} за {data['period']} дней вышло {data['count_books']} книг\n \
-                        Давай их посмотрим?", reply_markup=next_keyboard())
-    countr[message.from_user.id] = data['count_books'] - 1
-    await Whatsnew.next()
+async def show_list_book(call: types.CallbackQuery):
+    await delete_message(call.message)
+    await call.message.answer(f'ага, тут список книг, да \n(нет)')
+    await call.answer()
 
 
-def book_preview(book):
-    return f'''
-        <b>{book['author']}</b>    
-        {book['title']}
-        {book['short_abstract']}  
-        {book['url'] if book['url'] else ''}     
-        '''
-
-
-async def show_book(message: types.Message, book):
-    await message.answer(book_preview(book), parse_mode="HTML", reply_markup=next_keyboard())
-
-
-def next_keyboard():
-    buttons = [
-        types.InlineKeyboardButton(text="Дальше", callback_data="count_incr"),
-        types.InlineKeyboardButton(text="Назад", callback_data="count_decr"),
-    ]
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
-    keyboard.add(*buttons)
-    return keyboard
-
-
-# @dp.callback_query_handler(Text(startswith="count_"), state = Whatsnew.select_next_book)
-async def counter(call: types.CallbackQuery, state: FSMContext):
-    async with state.proxy() as state_data:
-        books = state_data['books']
-
+async def show_single_book(call: types.CallbackQuery):
+    await delete_message(call.message)
     if call.data == 'count_incr':
-        countr[call.from_user.id] -= 1
-        await show_book(call.message, books[countr[call.from_user.id]])
+        whatsnew_counter[call.from_user.id] += 1
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]])
     elif call.data == 'count_decr':
-        countr[call.from_user.id] += 1
-        await show_book(call.message, books[countr[call.from_user.id]])
-    # await call.answer()
+        whatsnew_counter[call.from_user.id] -= 1
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]])
+    await call.answer()
 
-# async def process_news_time(message: types.Message):
-#    def books_info(books):
-#        text = "\n".join([b['author'] + " " + b['title'] for b in books])
-#        return text
-#    markup = types.ReplyKeyboardRemove()
-#    if message.text == 'Неделя':
-#        from_date = dt.datetime.now() - dt.timedelta(days=7)
-#    else:  # message.text == 'Месяц':
-#        from_date = dt.datetime.now() - dt.timedelta(days=30)
-#    to_date = dt.datetime.now()
-#    book_text = books_info(find_books(config.db_name, from_date=from_date, to_date=to_date))
-#    # await Root.main.set()
-#    await message.answer(book_text, reply_markup=markup)
+
+async def show_book(message: types.Message, book_value: int):
+    await message.answer_photo(caption = f'''
+<b>{book_value['title']}</b>    
+{book_value['author']} 
+---
+{book_value['short_abstract']} 
+''', reply_markup=show_book_keyboard(), photo = book_value['image_path'])
+
+
+
