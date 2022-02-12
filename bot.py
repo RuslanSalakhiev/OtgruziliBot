@@ -57,25 +57,15 @@ dp.register_callback_query_handler(whatsnew.book_mode,
                             lambda call: call.data in ('1','2','3','4'), #хардкод - убрать
                             state=whatsnew.Whatsnew.select_publisher)
 
+dp.register_callback_query_handler(whatsnew.show_list_book,
+                            text='list',
+                            state=whatsnew.Whatsnew.select_book_mode)
+
 
 dp.register_callback_query_handler(whatsnew.show_single_book,
                             Text(startswith="count_"),
                             state=whatsnew.Whatsnew.select_book_mode)
 
-
-#
-# dp.register_message_handler(whatsnew.process_correct_period,
-#                             state=whatsnew.Whatsnew.select_period)
-#
-# dp.register_message_handler(whatsnew.process_invalid_publisher,
-#                             lambda message: message.text not in {'МИФ', 'Альпина', 'Corpus', 'Бумкнига'},
-#                             state=whatsnew.Whatsnew.select_publisher)
-#
-# dp.register_message_handler(whatsnew.process_correct_publisher,
-#                             state=whatsnew.Whatsnew.select_publisher)
-#
-# dp.register_callback_query_handler(whatsnew.counter, Text(startswith="count_"),
-#                                    state=whatsnew.Whatsnew.select_next_book)
 
 # Handlers for /subscribe
 dp.register_message_handler(subscribe.start_subscribe, commands=['Subscribe'])

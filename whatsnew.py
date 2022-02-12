@@ -81,7 +81,12 @@ async def book_mode(call: types.CallbackQuery):
 
     from_date = dt.datetime.now() - dt.timedelta(days=whatsnew_period[call.from_user.id])
     books_to_show[call.from_user.id] = find_books(config.db_name, publisher_id=whatsnew_publisher[call.from_user.id], from_date=from_date)
-    whatsnew_counter[call.from_user.id] = 2
+    whatsnew_counter[call.from_user.id] = 0
+    await call.answer()
+
+async def show_list_book(call: types.CallbackQuery):
+    await delete_message(call.message)
+    await call.message.answer(f'ага, тут список книг, да \n(нет)')
     await call.answer()
 
 
@@ -105,28 +110,4 @@ async def show_book(message: types.Message, book_value: int):
 ''', reply_markup=show_book_keyboard(), photo = book_value['image_path'])
 
 
-
-def book_preview(book):
-    return f'''
-<b>{book['title']}</b>
-{book['author']}
----    
-{book['short_abstract']}   
-'''
-
-
-
-
-
-# async def counter(call: types.CallbackQuery, state: FSMContext):
-#     async with state.proxy() as state_data:
-#         books = state_data['books']
-#
-#     if call.data == 'count_incr':
-#         whatsnew_data[call.from_user.id] -= 1
-#         await show_book(call.message, books[whatsnew_data[call.from_user.id]])
-#     elif call.data == 'count_decr':
-#         whatsnew_data[call.from_user.id] += 1
-#         await show_book(call.message, books[whatsnew_data[call.from_user.id]])
-#     await call.answer()
 

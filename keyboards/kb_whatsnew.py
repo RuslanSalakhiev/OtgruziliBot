@@ -54,6 +54,7 @@ def book_mode_keyboard() -> InlineKeyboardMarkup:
     keyboard.add(*buttons)
     return keyboard
 
+
 def show_book_keyboard() -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(text="Дальше", callback_data="count_incr"),
