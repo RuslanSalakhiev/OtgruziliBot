@@ -40,7 +40,7 @@ def select_publisher_keyboard(publishers) -> InlineKeyboardMarkup:
 
     for pub in publishers:
         if pub['newbooks'] >0:
-            btn = InlineKeyboardButton(text=f"{pub['name']}: {pub['newbooks']} книг", callback_data=pub['name'])
+            btn = InlineKeyboardButton(text=f"{pub['name']}: {pub['newbooks']} книг", callback_data=pub['id'])
             keyboard.row(btn)
 
     return keyboard
@@ -48,7 +48,7 @@ def select_publisher_keyboard(publishers) -> InlineKeyboardMarkup:
 def book_mode_keyboard() -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(text="Списком", callback_data="list"),
-        InlineKeyboardButton(text="По одной", callback_data="one")
+        InlineKeyboardButton(text="По одной", callback_data="count_incr")
     ]
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)

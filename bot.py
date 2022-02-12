@@ -54,16 +54,14 @@ dp.register_callback_query_handler(whatsnew.select_publisher,
                             state=whatsnew.Whatsnew.select_period)
 
 dp.register_callback_query_handler(whatsnew.book_mode,
-                            lambda call: call.data in ('МИФ','Альпина','Corpus','Бумкнига'),
+                            lambda call: call.data in ('1','2','3','4'), #хардкод - убрать
                             state=whatsnew.Whatsnew.select_publisher)
 
-dp.register_callback_query_handler(whatsnew.show_book,
-                            lambda call: call.data in ('list','one'),
+
+dp.register_callback_query_handler(whatsnew.show_single_book,
+                            Text(startswith="count_"),
                             state=whatsnew.Whatsnew.select_book_mode)
 
-dp.register_callback_query_handler(whatsnew.show_book,
-                            lambda call: call.data in ('list','one'),
-                            state=whatsnew.Whatsnew.select_book_mode)
 
 #
 # dp.register_message_handler(whatsnew.process_correct_period,
