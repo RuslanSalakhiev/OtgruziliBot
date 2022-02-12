@@ -81,7 +81,7 @@ def parse_corpus(db_name, publisher_name):
                 r = requests.get(book_url)
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
-                image_url = bookpage_xml.find('div', class_='productzoom__top__info__image').find('a').get('href')
+                image_url ='https://www.corpus.ru'+ bookpage_xml.find('div', class_='productzoom__top__info__image').find('a').get('href')
 
                 abstract_block = bookpage_xml.find('div', class_='rowBlockText').findAll()
 
