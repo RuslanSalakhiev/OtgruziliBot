@@ -203,7 +203,7 @@ if __name__ == '__main__':
     # add_publisher(config.db_name, 'Corpus')  #вручную добавить паблишера
     # add_publisher(config.db_name, 'Бумкнига')  # вручную добавить паблишера
 
-    publisher_list = [{ 'name':p['name'], 'publisher_id':p['publisher_id']} for p in get_all_publishers(config.db_name)]
+    publisher_list = [{ 'name':p['name'], 'publisher_id':p['id']} for p in get_all_publishers(config.db_name)]
 
     for publisher in publisher_list:
         # парсинг
