@@ -64,7 +64,10 @@ async def select_publisher(call: types.CallbackQuery):
 
 async def book_mode(call: types.CallbackQuery):
     await delete_message(call.message)
-    whatsnew_publisher[call.from_user.id] = call.data
+    #проверка на навигационный колбэк
+    if call.data != 'navi_whatsnew_book_mode':
+        whatsnew_publisher[call.from_user.id] = call.data
+
     await Whatsnew.select_book_mode.set()
     await call.message.answer(f'Как показать книги?', reply_markup = book_mode_keyboard(previous_step='whatsnew_publishers'))
 
@@ -86,20 +89,20 @@ async def show_list_book(call: types.CallbackQuery):
 async def show_single_book(call: types.CallbackQuery):
     await delete_message(call.message)
     if call.data == 'count_incr':
-        # зациклить счетчик книг
-
+        # зациклить показ книг
         if whatsnew_counter[call.from_user.id] == len(books_to_show[call.from_user.id]) :
             whatsnew_counter[call.from_user.id] = 1
         else:
             whatsnew_counter[call.from_user.id] += 1
     elif call.data == 'count_decr':
-        # зациклить счетчик книг
+        # зациклить показ книг
         if whatsnew_counter[call.from_user.id] == 1:
             whatsnew_counter[call.from_user.id] = len( books_to_show[call.from_user.id])
         else:
             whatsnew_counter[call.from_user.id] -= 1
-    else:  #приход из списка
+    else:  #если коллбэк приходит из меню списков
         whatsnew_counter[call.from_user.id]=int(call.data.split('_')[1])
+
     await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id] - 1],whatsnew_counter[call.from_user.id], len(books_to_show[call.from_user.id]))
     await call.answer()
 
