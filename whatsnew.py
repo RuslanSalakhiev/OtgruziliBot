@@ -81,6 +81,8 @@ async def book_mode(call: types.CallbackQuery):
 
     from_date = dt.datetime.now() - dt.timedelta(days=whatsnew_period[call.from_user.id])
     books_to_show[call.from_user.id] = find_books(config.db_name, publisher_id=whatsnew_publisher[call.from_user.id], from_date=from_date)
+
+    # начало отсчета книга
     whatsnew_counter[call.from_user.id] = 0
     await call.answer()
 
@@ -93,11 +95,20 @@ async def show_list_book(call: types.CallbackQuery):
 async def show_single_book(call: types.CallbackQuery):
     await delete_message(call.message)
     if call.data == 'count_incr':
-        whatsnew_counter[call.from_user.id] += 1
-        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
+        # зациклить счетчик книг
+
+        if whatsnew_counter[call.from_user.id] == len(books_to_show[call.from_user.id]) :
+            whatsnew_counter[call.from_user.id] = 1
+        else:
+            whatsnew_counter[call.from_user.id] += 1
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]-1],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
     elif call.data == 'count_decr':
-        whatsnew_counter[call.from_user.id] -= 1
-        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
+        # зациклить счетчик книг
+        if whatsnew_counter[call.from_user.id] == 1:
+            whatsnew_counter[call.from_user.id] = len( books_to_show[call.from_user.id])
+        else:
+            whatsnew_counter[call.from_user.id] -= 1
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]-1],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
     await call.answer()
 
 
