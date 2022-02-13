@@ -28,7 +28,7 @@ def parse_mif(db_name, publisher_name):
             try:
 
                 image_url = 'https://www.mann-ivanov-ferber.ru/' + book.find('a', class_='lego-book__cover').find(
-                    'img').get('data-original').replace('0.50x', '2.00x')
+                    'img').get('data-original').replace('0.50x','1.00x')
 
                 title = book.find('div', class_='lego-book__cover-loading-title').findAll('p')[0].text
                 author = book.find('div', class_='lego-book__cover-loading-title').findAll('p')[1].text
@@ -81,7 +81,7 @@ def parse_corpus(db_name, publisher_name):
                 r = requests.get(book_url)
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
-                image_url ='https://www.corpus.ru'+ bookpage_xml.find('div', class_='productzoom__top__info__image').find('a').get('href')
+                image_url ='https://www.corpus.ru'+ bookpage_xml.find('div', class_='productzoom__top__info__image').find('img').get('src')
 
                 abstract_block = bookpage_xml.find('div', class_='rowBlockText').findAll()
 
