@@ -94,20 +94,20 @@ async def show_single_book(call: types.CallbackQuery):
     await delete_message(call.message)
     if call.data == 'count_incr':
         whatsnew_counter[call.from_user.id] += 1
-        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]])
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
     elif call.data == 'count_decr':
         whatsnew_counter[call.from_user.id] -= 1
-        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]])
+        await show_book(call.message, books_to_show[call.from_user.id][whatsnew_counter[call.from_user.id]],whatsnew_counter[call.from_user.id],len( books_to_show[call.from_user.id]))
     await call.answer()
 
 
-async def show_book(message: types.Message, book_value: int):
+async def show_book(message: types.Message, book_value: int, counter, total_books):
     await message.answer_photo(caption = f'''
-<b>{book_value['title']}</b>    
+<i>[{counter}/{total_books}]</i> <b>{book_value['title']}</b>    
 {book_value['author']} 
 ---
-{book_value['short_abstract']} 
-''', reply_markup=show_book_keyboard(), photo = book_value['image_path'])
+{book_value['short_abstract'][:600]} 
+''', reply_markup=show_book_keyboard(book_value['url']), photo = book_value['image_path'])
 
 
 

@@ -55,11 +55,11 @@ def book_mode_keyboard() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def show_book_keyboard() -> InlineKeyboardMarkup:
+def show_book_keyboard(url) -> InlineKeyboardMarkup:
     buttons = [
         InlineKeyboardButton(text="Дальше", callback_data="count_incr"),
-        InlineKeyboardButton(text="Назад", callback_data="count_decr"),
-        InlineKeyboardButton(text="На сайт", callback_data="site"),
+        InlineKeyboardButton(text="Назад ", callback_data="count_decr"),
+        InlineKeyboardButton(text="На сайт", url=url),
     ]
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
