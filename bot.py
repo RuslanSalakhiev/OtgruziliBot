@@ -36,6 +36,14 @@ async def process_start(message: types.Message):
     Подпишись на новинки любимого издательства или посмотри какие книги недавно поступили в продажу', reply_markup = main_menu_keyboard())
 
 
+@dp.callback_query_handler(lambda call: call.data in ('navi_start','navi_main_menu'), state ='*')
+async def process_start(call: types.CallbackQuery):
+    await Root.main.set()
+    await whatsnew.delete_message(call.message)
+    await call.message.answer('Привет, это бот книжных новинок. \
+    Подпишись на новинки любимого издательства или посмотри какие книги недавно поступили в продажу', reply_markup = main_menu_keyboard())
+    await call.answer()
+
 @dp.message_handler(commands=['Help'], state='*')
 async def process_help(message: types.Message):
     await Root.main.set()
@@ -46,16 +54,18 @@ async def process_help(message: types.Message):
                          /help - инструкция по работе с ботом''')
 
 dp.register_callback_query_handler(whatsnew.select_period,
-                            text='whatsnew',
+                            lambda call: call.data in ('whatsnew','navi_whatsnew_period'),
                             state='*')
 
 dp.register_callback_query_handler(whatsnew.select_publisher,
-                            lambda call: call.data in ('7','30'),
-                            state=whatsnew.Whatsnew.select_period)
+                            lambda call: call.data in ('7','30','navi_whatsnew_publishers'),
+                            # lambda state:state._state in (whatsnew.Whatsnew.select_period,whatsnew.Whatsnew.select_book_mode)
+                            state = '*')
 
 dp.register_callback_query_handler(whatsnew.book_mode,
-                            lambda call: call.data in ('1','2','3','4'), #хардкод - убрать
-                            state=whatsnew.Whatsnew.select_publisher)
+                            lambda call: call.data in ('1','2','3','4','navi_whatsnew_book_mode'), #хардкод - убрать
+                            # lambda state:state._state in (whatsnew.Whatsnew.select_publisher, whatsnew.Whatsnew.show_single_book, whatsnew.Whatsnew.show_list_book)
+                            state = '*')
 
 dp.register_callback_query_handler(whatsnew.show_list_book,
                             text='list',
@@ -75,6 +85,8 @@ dp.register_message_handler(subscribe.process_publisher,
 
 dp.register_message_handler(subscribe.process_period,
                             state=subscribe.BranchStates.select_period)
+
+
 
 def send_to_channel(text: str):
     executor.start(dp, main(text))
