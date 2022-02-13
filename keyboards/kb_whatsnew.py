@@ -1,4 +1,12 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import emoji
+
+def navigation_buttons():
+    buttons = [
+        InlineKeyboardButton(text=emoji.emojize(":right_arrow_curving_up:")+" В начало", callback_data='navi_start'),
+        InlineKeyboardButton(text=emoji.emojize(":left_arrow:")+" Назад", callback_data='navi_back'),
+    ]
+    return buttons
 
 def main_menu_keyboard() -> InlineKeyboardMarkup:
     buttons = [
@@ -20,29 +28,19 @@ def select_period_keyboard() -> InlineKeyboardMarkup:
     ]
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
+    keyboard.row(*navigation_buttons())
     return keyboard
-
-
-# def select_publisher_keyboard(publishers) -> InlineKeyboardMarkup:
-#     buttons = [
-#         InlineKeyboardButton(text="МИФ", callback_data="МИФ"),
-#         InlineKeyboardButton(text="Альпина", callback_data="Альпина"),
-#         InlineKeyboardButton(text="Corpus", callback_data="Corpus"),
-#         InlineKeyboardButton(text="Бумкнига", callback_data="Бумкнига")
-#     ]
-#     keyboard = InlineKeyboardMarkup(row_width=1)
-#     keyboard.add(*buttons)
-#     return keyboard
 
 
 def select_publisher_keyboard(publishers) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
 
+
     for pub in publishers:
         if pub['newbooks'] >0:
             btn = InlineKeyboardButton(text=f"{pub['name']}: {pub['newbooks']} книг", callback_data=pub['id'])
             keyboard.row(btn)
-
+    keyboard.row(*navigation_buttons())
     return keyboard
 
 def book_mode_keyboard() -> InlineKeyboardMarkup:
@@ -52,17 +50,20 @@ def book_mode_keyboard() -> InlineKeyboardMarkup:
     ]
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
+    keyboard.row(*navigation_buttons())
     return keyboard
 
 
 def show_book_keyboard(url) -> InlineKeyboardMarkup:
     buttons = [
-        InlineKeyboardButton(text="Дальше", callback_data="count_incr"),
-        InlineKeyboardButton(text="Назад ", callback_data="count_decr"),
-        InlineKeyboardButton(text="На сайт", url=url),
+        InlineKeyboardButton(text="Следующая", callback_data="count_incr"),
+        InlineKeyboardButton(text="Предыдущая", callback_data="count_decr"),
+        InlineKeyboardButton(text="На сайт", url=url)
+
     ]
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(*buttons)
+    keyboard.row(*navigation_buttons())
     return keyboard
 
 

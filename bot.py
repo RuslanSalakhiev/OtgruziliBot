@@ -36,6 +36,14 @@ async def process_start(message: types.Message):
     Подпишись на новинки любимого издательства или посмотри какие книги недавно поступили в продажу', reply_markup = main_menu_keyboard())
 
 
+@dp.callback_query_handler(text = 'navi_start', state ='*')
+async def process_start(call: types.CallbackQuery):
+    await Root.main.set()
+    await whatsnew.delete_message(call.message)
+    await call.message.answer('Привет, это бот книжных новинок. \
+    Подпишись на новинки любимого издательства или посмотри какие книги недавно поступили в продажу', reply_markup = main_menu_keyboard())
+    await call.answer()
+
 @dp.message_handler(commands=['Help'], state='*')
 async def process_help(message: types.Message):
     await Root.main.set()
@@ -75,6 +83,8 @@ dp.register_message_handler(subscribe.process_publisher,
 
 dp.register_message_handler(subscribe.process_period,
                             state=subscribe.BranchStates.select_period)
+
+
 
 def send_to_channel(text: str):
     executor.start(dp, main(text))
