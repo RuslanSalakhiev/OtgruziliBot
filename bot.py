@@ -86,15 +86,18 @@ dp.register_message_handler(subscribe.process_publisher,
 dp.register_message_handler(subscribe.process_period,
                             state=subscribe.BranchStates.select_period)
 
+# отправка сообщений в технический канал
+def send_to_channel(text: str, message_type:str):
+    if message_type == 'text':
+        executor.start(dp, send_message(config.chat_id,text))
+    elif message_type == 'photo':
+        file_id = executor.start(dp, send_photo(config.chat_id, text))
+        return file_id
 
-
-def send_to_channel(text: str):
-    executor.start(dp, main(text))
-
-
-async def main(text: str):
-    await send_message(config.chat_id, text)
-
+# получение file_id обложек
+async def send_photo(channel_id: int, url: str):
+    response = await bot.send_photo(channel_id,photo=url)
+    return response['photo'][0]['file_id']
 
 async def send_message(channel_id: int, text: str):
     await bot.send_message(channel_id, text)

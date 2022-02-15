@@ -208,9 +208,14 @@ if __name__ == '__main__':
     for publisher in publisher_list:
         # парсинг
         books, parsed,to_parse, total  = parser_selector(config.db_name,publisher['name'])
+
+        # получение file_id и перезапись image_url
+        for idx,book in enumerate(books):
+            books[idx][3]= send_to_channel(book[3],'photo')
+            sleep(4)
         # добавление в бд
         update_count = update_db(config.db_name, books,publisher['publisher_id'] )
         # формирование сообщения
         status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher['name'])
     #отправка в бот
-    send_to_channel(status_message)
+    send_to_channel(status_message,'text')
