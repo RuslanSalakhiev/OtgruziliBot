@@ -63,7 +63,7 @@ dp.register_callback_query_handler(whatsnew.select_publisher,
                             state = '*')
 
 dp.register_callback_query_handler(whatsnew.book_mode,
-                            lambda call: call.data in ('1','2','3','4','navi_whatsnew_book_mode'), #хардкод - убрать
+                            lambda call: call.data in ('1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','navi_whatsnew_book_mode'), #хардкод - убрать
                             # lambda state:state._state in (whatsnew.Whatsnew.select_publisher, whatsnew.Whatsnew.show_single_book, whatsnew.Whatsnew.show_list_book)
                             state = '*')
 
