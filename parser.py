@@ -56,6 +56,8 @@ def parser_selector(db_name, publisher_name):
         return ps.alpina(config.db_name, publisher_name)
     elif publisher_name == 'Поляндрия':
         return ps.polyandria(config.db_name, publisher_name)
+    elif publisher_name == 'Clever':
+        return ps.clever(config.db_name, publisher_name)
     else:
         return [],0,0,0
 
@@ -68,7 +70,7 @@ if __name__ == '__main__':
     # add_publisher(config.db_name, 'Азбука-Аттикус','https://azbooka.ru')
     # add_publisher(config.db_name, 'Ред. Ел.Шубиной','https://ast.ru/redactions/redaktsiya-eleny-shubinoy/')
     # add_publisher(config.db_name, 'РИПОЛ Классик','https://ripol.ru/')
-    # add_publisher(config.db_name, 'Клевер','https://www.clever-media.ru')
+    # add_publisher(config.db_name, 'Clever','https://www.clever-media.ru')
     # add_publisher(config.db_name, 'Самокат','https://samokatbook.ru/')
     # add_publisher(config.db_name, 'Карьера Пресс','https://careerpress.ru')
     # add_publisher(config.db_name, 'Поляндрия','https://polyandria.ru')

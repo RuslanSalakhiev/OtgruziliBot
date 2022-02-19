@@ -57,8 +57,6 @@ def alpina(db_name, publisher_name):
 def mif(db_name, publisher_name):
     url = 'https://www.mann-ivanov-ferber.ru/books/new/'
 
-    if find_publisher(db_name,publisher_name) is None: add_publisher(db_name, publisher_name)
-
     r = requests.get(url)
     catalog_xml = BeautifulSoup(r.text, 'lxml')
     books = catalog_xml.find('div', class_='c-page-new-best-soon m-new').find('div').findAll('div', class_='lego-book')
@@ -105,8 +103,6 @@ def mif(db_name, publisher_name):
 def corpus(db_name, publisher_name):
     url = 'https://www.corpus.ru/products/novinki/'
 
-    if find_publisher(db_name, publisher_name) is None: add_publisher(db_name,  publisher_name)
-
     r = requests.get(url)
     catalog_xml = BeautifulSoup(r.text, 'lxml')
 
@@ -152,8 +148,6 @@ def boom(db_name, publisher_name):
     exceptions = ['https://boomkniga.ru/shop/other/boom-karta/', 'https://boomkniga.ru/shop/other/bumshoper-belyj/',
                   'https://boomkniga.ru/shop/other/bumshoper-chernyj/']
     url = 'https://boomkniga.ru/shop/'
-
-    if find_publisher(db_name, publisher_name) is None: add_publisher(db_name, publisher_name)
 
     r = requests.get(url)
     catalog_xml = BeautifulSoup(r.text, 'lxml')
@@ -230,6 +224,49 @@ def polyandria(db_name, publisher_name):
                 abstract_block = bookpage.findAll()
 
                 short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
+
+def clever(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://www.clever-media.ru/books/filter/priznak-is-1/apply/?SORT=property_DATE_PUBLICATION_SORT%7CDESC'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='book-preview')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://www.clever-media.ru' + book.find('a', class_='js-item').get('href')
+
+        title = book.find('div', class_='book-name').find('a').get('data-name')
+        author = '' if book.find('div', class_='author right_b').text is None else book.find('div',
+                                                                                                class_='author right_b').text
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                image_url = 'https://www.clever-media.ru' + bookpage_xml.find('div', class_='m1').find('img').get('src')
+                bookpage = bookpage_xml.find('div', class_='tab-pane', id='productDescription')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[1].text
                 full_abstract = ''
                 for text_part in abstract_block:
                     full_abstract = full_abstract + text_part.text + '\n'
