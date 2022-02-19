@@ -7,6 +7,53 @@ from data import add_book, find_publisher, find_book, add_publisher,print_books,
 import config
 from bot import send_to_channel
 
+def parse_alpina(db_name, publisher_name):
+    url = 'https://alpinabook.ru/catalog/filter/new-is-new-books-only/apply/'
+
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='b-book-v__pic')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://alpinabook.ru' + book.find('a').get('href')
+
+        image_url = 'https://alpinabook.ru' + book.find('img').get('src')
+        if find_book(db_name, book_url) is None:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+
+                r = requests.get(book_url)
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                title = bookpage_xml.find('span', class_='b-book-primary__title-main').text
+
+                authors = bookpage_xml.find('div', class_='b-book-primary__authors').findAll('a')
+                author_list = []
+                for one_author in authors:
+                    author_list.append(one_author.text)
+                author = ','.join(author_list)
+
+                bookpage = bookpage_xml.find('section', class_='book-content-section')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+
+    return data, len(data), to_parse, len(books)
+
 
 def parse_mif(db_name, publisher_name):
     url = 'https://www.mann-ivanov-ferber.ru/books/new/'
@@ -192,6 +239,8 @@ def parser_selector(db_name, publisher_name):
         return parse_corpus(config.db_name, publisher_name)
     elif publisher_name == 'Бумкнига':
         return parse_boom(config.db_name, publisher_name)
+    elif publisher_name == 'Альпина':
+        return parse_alpina(config.db_name, publisher_name)
     else:
         return [],0,0,0
 
@@ -200,8 +249,21 @@ today = date.today().strftime("%d/%m")
 status_message = f"{today}\nСайт(All/New)→ Парсер → БД\n"
 
 if __name__ == '__main__':
-    # add_publisher(config.db_name, 'Corpus')  #вручную добавить паблишера
-    # add_publisher(config.db_name, 'Бумкнига')  # вручную добавить паблишера
+    add_publisher(config.db_name, 'AD Marginem','https://admarginem.ru/')  # вручную добавить паблишера
+    add_publisher(config.db_name, 'Азбука-Аттикус','https://azbooka.ru')
+    add_publisher(config.db_name, 'Редакция Елены Шубиной','https://ast.ru/redactions/redaktsiya-eleny-shubinoy/')
+    add_publisher(config.db_name, 'РИПОЛ Классик','https://ripol.ru/')
+    add_publisher(config.db_name, 'Клевер','https://www.clever-media.ru')
+    add_publisher(config.db_name, 'Самокат','https://samokatbook.ru/')
+    add_publisher(config.db_name, 'Карьера Пресс','https://careerpress.ru')
+    add_publisher(config.db_name, 'Поляндрия','https://polyandria.ru')
+    add_publisher(config.db_name, 'Мелик - Пашаев','https://melik-pashaev.online')
+    add_publisher(config.db_name, 'Розовый жираф','https: // www.pgbooks.ru')
+    add_publisher(config.db_name, 'Пешком в историю','https://www.peshkombooks.ru')
+    add_publisher(config.db_name, 'Livebook','https://livebooks.ru')
+    add_publisher(config.db_name, 'Фантом Пресс', 'https://phantom-press.ru')
+    add_publisher(config.db_name, 'fanzon', 'https://fanzon-portal.ru')
+
 
     publisher_list = [{ 'name':p['name'], 'publisher_id':p['id']} for p in get_all_publishers(config.db_name)]
 
