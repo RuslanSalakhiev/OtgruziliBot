@@ -2,6 +2,7 @@ from datetime import date
 from time import sleep
 import requests
 from bs4 import BeautifulSoup
+import emoji
 
 from data import add_book, find_publisher, find_book, add_publisher,print_books,get_all_publishers
 import config
@@ -223,11 +224,12 @@ def update_db(db_name, books, publisher_id):
 
 def check_status(parsed,to_parse, total,update_count, status_message, publisher_name):
     # выравнивание длины строки
-    print_publisher = "{:<12}".format(publisher_name)
+    print_publisher = "{:<16}".format(publisher_name)
 
-    status = 'ок' if total > 0 and to_parse == parsed and parsed == update_count else 'alarm!!!'
+    status = emoji.emojize(":green_book:") if total > 0 and to_parse == parsed and parsed == update_count else  emoji.emojize(":closed_book:")
 
-    status_message = status_message + f"<b>{print_publisher}:</b> {total}/{to_parse} → {parsed} → {update_count} :{status}\n"
+    total = ' '+str(total) if len(str(total))==1 else total
+    status_message = status_message + f"<code><b>{status}{print_publisher}:</b>{total}/{to_parse}→{parsed}→{update_count}\n</code>"
 
     return status_message
 
