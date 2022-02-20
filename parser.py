@@ -58,6 +58,10 @@ def parser_selector(db_name, publisher_name):
         return ps.polyandria(config.db_name, publisher_name)
     elif publisher_name == 'Clever':
         return ps.clever(config.db_name, publisher_name)
+    elif publisher_name == 'Азбука-Аттикус':
+        return ps.azbuka(config.db_name, publisher_name)
+    elif publisher_name == 'Карьера Пресс':
+        return ps.career(config.db_name, publisher_name)
     else:
         return [],0,0,0
 
