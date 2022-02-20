@@ -58,6 +58,20 @@ def parser_selector(db_name, publisher_name):
         return ps.polyandria(config.db_name, publisher_name)
     elif publisher_name == 'Clever':
         return ps.clever(config.db_name, publisher_name)
+    elif publisher_name == 'Азбука-Аттикус':
+        return ps.azbuka(config.db_name, publisher_name)
+    elif publisher_name == 'Карьера Пресс':
+        return ps.career(config.db_name, publisher_name)
+    elif publisher_name == 'Бомбора':
+        return ps.bombora(config.db_name, publisher_name)
+    elif publisher_name == 'Эксмо':
+        return ps.eksmo(config.db_name, publisher_name)
+    elif publisher_name == 'Эксмодетство':
+        return ps.eksmo_det(config.db_name, publisher_name)
+    elif publisher_name == 'Комильфо':
+        return ps.komilfo(config.db_name, publisher_name)
+    elif publisher_name == 'fanzon':
+        return ps.fanzon(config.db_name, publisher_name)
     else:
         return [],0,0,0
 
@@ -67,19 +81,7 @@ status_message = f"{today}\nСайт(All/New)→ Парсер → БД\n"
 
 if __name__ == '__main__':
     # add_publisher(config.db_name, 'AD Marginem','https://admarginem.ru/')  # вручную добавить паблишера
-    # add_publisher(config.db_name, 'Азбука-Аттикус','https://azbooka.ru')
-    # add_publisher(config.db_name, 'Ред. Ел.Шубиной','https://ast.ru/redactions/redaktsiya-eleny-shubinoy/')
-    # add_publisher(config.db_name, 'РИПОЛ Классик','https://ripol.ru/')
-    # add_publisher(config.db_name, 'Clever','https://www.clever-media.ru')
-    # add_publisher(config.db_name, 'Самокат','https://samokatbook.ru/')
-    # add_publisher(config.db_name, 'Карьера Пресс','https://careerpress.ru')
-    # add_publisher(config.db_name, 'Поляндрия','https://polyandria.ru')
-    # add_publisher(config.db_name, 'Мелик - Пашаев','https://melik-pashaev.online')
-    # add_publisher(config.db_name, 'Розовый жираф','https: // www.pgbooks.ru')
-    # add_publisher(config.db_name, 'Пешком в историю','https://www.peshkombooks.ru')
-    # add_publisher(config.db_name, 'Livebook','https://livebooks.ru')
-    # add_publisher(config.db_name, 'Фантом Пресс', 'https://phantom-press.ru')
-    # add_publisher(config.db_name, 'fanzon', 'https://fanzon-portal.ru')
+
 
     publisher_list = [{ 'name':p['name'], 'publisher_id':p['id']} for p in get_all_publishers(config.db_name)]
 
