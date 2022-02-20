@@ -362,6 +362,7 @@ def career(db_name, publisher_name):
                 short_abstract = ''
                 full_abstract = ''
 
+
                 data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
             except:
                 pass
@@ -376,7 +377,6 @@ def bombora(db_name, publisher_name):
     url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1192'
     r = requests.get(url)
 
-
     catalog_xml = BeautifulSoup(r.text, 'lxml')
     books = catalog_xml.findAll('div', class_='books__item')
 
@@ -386,8 +386,8 @@ def bombora(db_name, publisher_name):
     for book in books:
         book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
         title = book.find('img', class_='book__img').get('alt')
-
         image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
         author = '' if book.find('div', class_='book__author') is None else book.find('div',
                                                                                              class_='book__author').text
 
@@ -442,6 +442,7 @@ def eksmo(db_name, publisher_name):
             try:
                 # парсинг страницы книги
                 r = requests.get(book_url)
+
                 r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
@@ -486,6 +487,7 @@ def eksmo_det(db_name, publisher_name):
             try:
                 # парсинг страницы книги
                 r = requests.get(book_url)
+
                 r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
