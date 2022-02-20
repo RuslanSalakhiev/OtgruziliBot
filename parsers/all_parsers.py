@@ -206,7 +206,7 @@ def polyandria(db_name, publisher_name):
         book_url = 'https://polyandria.ru' + book.find('a').get('href')
 
         title = book.find('div', class_='book__item__name').find('a').get('title')
-        author = '' if book.find('div', class_='book__item__autor').text is None else book.find('div',
+        author = '' if book.find('div', class_='book__item__autor') is None else book.find('div',
                                                                                                 class_='book__item__autor').text
 
         if find_book(db_name, book_url) is None and book_url not in exceptions:
@@ -250,7 +250,7 @@ def clever(db_name, publisher_name):
         book_url = 'https://www.clever-media.ru' + book.find('a', class_='js-item').get('href')
 
         title = book.find('div', class_='book-name').find('a').get('data-name')
-        author = '' if book.find('div', class_='author right_b').text is None else book.find('div',
+        author = '' if book.find('div', class_='author right_b') is None else book.find('div',
                                                                                                 class_='author right_b').text
 
         if find_book(db_name, book_url) is None and book_url not in exceptions:
@@ -374,3 +374,224 @@ def career(db_name, publisher_name):
             sleep(2)
     return data, len(data), to_parse, len(books)
 
+
+def bombora(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1192'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='books__item')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
+        title = book.find('img', class_='book__img').get('alt')
+        image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
+        author = '' if book.find('div', class_='book__author') is None else book.find('div',
+                                                                                             class_='book__author').text
+
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                bookpage = bookpage_xml.find('div', class_='spoiler__text')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
+
+def eksmo(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=603'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='books__item')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
+        title = book.find('img', class_='book__img').get('alt')
+        image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
+        author = '' if book.find('div', class_='book__author') is None else book.find('div',
+                                                                                             class_='book__author').text
+
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                bookpage = bookpage_xml.find('div', class_='spoiler__text')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
+
+def eksmo_det(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1198'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='books__item')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
+        title = book.find('img', class_='book__img').get('alt')
+        image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
+        author = '' if book.find('div', class_='book__author') is None else book.find('div',
+                                                                                             class_='book__author').text
+
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                bookpage = bookpage_xml.find('div', class_='spoiler__text')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
+
+
+def fanzon(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1181'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='books__item')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
+        title = book.find('img', class_='book__img').get('alt')
+        image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
+        author = '' if book.find('div', class_='book__author') is None else book.find('div',
+                                                                                             class_='book__author').text
+
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                bookpage = bookpage_xml.find('div', class_='spoiler__text')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
+
+def komilfo(db_name, publisher_name):
+    # список урлов некниг ()
+    exceptions = []
+    url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1193'
+    r = requests.get(url)
+    catalog_xml = BeautifulSoup(r.text, 'lxml')
+    books = catalog_xml.findAll('div', class_='books__item')
+
+    data = []
+    to_parse = 0
+    # парсинг каталога новинок
+    for book in books:
+        book_url = 'https://eksmo.ru' + book.find('a', class_='book__link').get('href')
+        title = book.find('img', class_='book__img').get('alt')
+        image_url = book.find('img', class_='book__img').get('srcset').replace(' 2x','')
+
+        author = '' if book.find('div', class_='book__author') is None else book.find('div',
+                                                                                             class_='book__author').text
+
+
+        if find_book(db_name, book_url) is None and book_url not in exceptions:
+            to_parse += 1
+            try:
+                # парсинг страницы книги
+                r = requests.get(book_url)
+
+                bookpage_xml = BeautifulSoup(r.text, 'lxml')
+
+                bookpage = bookpage_xml.find('div', class_='spoiler__text')
+
+                abstract_block = bookpage.findAll()
+
+                short_abstract = abstract_block[0].text
+                full_abstract = ''
+                for text_part in abstract_block:
+                    full_abstract = full_abstract + text_part.text + '\n'
+
+                data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
+            except:
+                pass
+
+            sleep(2)
+    return data, len(data), to_parse, len(books)
