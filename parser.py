@@ -82,7 +82,6 @@ status_message = f"{today}\nСайт(All/New)→ Парсер → БД\n"
 if __name__ == '__main__':
     # add_publisher(config.db_name, 'AD Marginem','https://admarginem.ru/')  # вручную добавить паблишера
 
-
     publisher_list = [{ 'name':p['name'], 'publisher_id':p['id']} for p in get_all_publishers(config.db_name)]
 
     for publisher in publisher_list:
@@ -91,7 +90,11 @@ if __name__ == '__main__':
 
         # получение file_id и перезапись image_url
         for idx,book in enumerate(books):
-            books[idx][3]= send_to_channel(book[3],'photo')
+            try:
+                books[idx][3]= send_to_channel(book[3],'photo')
+            except:
+                # странный баг по Эксмо: при отправке фото в канал какие то падают с ошибкой, тогда подменяю урл фото
+                books[idx][3] = send_to_channel(book[3].replace('410','820'),'photo')
             sleep(4)
         # добавление в бд
         update_count = update_db(config.db_name, books,publisher['publisher_id'] )
