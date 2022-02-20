@@ -358,14 +358,10 @@ def career(db_name, publisher_name):
 
                 image_url = bookpage_xml.find('img',class_='bookcover').get('src')
 
-                bookpage = bookpage_xml.find('div', class_='span-two-thirds')
-
-                abstract_block = bookpage.findAll()
-
-                short_abstract = abstract_block[0].text
+                # очень корявый сайт
+                short_abstract = ''
                 full_abstract = ''
-                for text_part in abstract_block:
-                    full_abstract = full_abstract + text_part.text + '\n'
+
 
                 data.append([title, book_url, author, image_url, short_abstract, full_abstract, publisher_name])
             except:
@@ -380,6 +376,7 @@ def bombora(db_name, publisher_name):
     exceptions = []
     url = 'https://eksmo.ru/book/?sort=date&novinka[]=1&available[]=2&format[]=p&publisher[]=1192'
     r = requests.get(url)
+
     catalog_xml = BeautifulSoup(r.text, 'lxml')
     books = catalog_xml.findAll('div', class_='books__item')
 
@@ -400,6 +397,7 @@ def bombora(db_name, publisher_name):
             try:
                 # парсинг страницы книги
                 r = requests.get(book_url)
+                r.encoding = "win1251"
 
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
@@ -445,6 +443,7 @@ def eksmo(db_name, publisher_name):
                 # парсинг страницы книги
                 r = requests.get(book_url)
 
+                r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
                 bookpage = bookpage_xml.find('div', class_='spoiler__text')
@@ -489,6 +488,7 @@ def eksmo_det(db_name, publisher_name):
                 # парсинг страницы книги
                 r = requests.get(book_url)
 
+                r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
                 bookpage = bookpage_xml.find('div', class_='spoiler__text')
@@ -533,7 +533,7 @@ def fanzon(db_name, publisher_name):
             try:
                 # парсинг страницы книги
                 r = requests.get(book_url)
-
+                r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
                 bookpage = bookpage_xml.find('div', class_='spoiler__text')
@@ -577,7 +577,7 @@ def komilfo(db_name, publisher_name):
             try:
                 # парсинг страницы книги
                 r = requests.get(book_url)
-
+                r.encoding = "win1251"
                 bookpage_xml = BeautifulSoup(r.text, 'lxml')
 
                 bookpage = bookpage_xml.find('div', class_='spoiler__text')
