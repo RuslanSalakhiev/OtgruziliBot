@@ -7,7 +7,7 @@ from collections import namedtuple
 
 Book = namedtuple('Book',
                   ['book_id', 'publisher_id', 'title', 'author',
-                   'release_date', 'short_abstract', 'long_absract', 'url', 'image_path'])
+                   'release_date', 'short_abstract', 'long_absract', 'url', 'image_path','is_sent_to_channel'])
 
 def get_args():
     parser = argparse.ArgumentParser(description="The module creates and manages the database for OtgruziliBot. \
@@ -228,6 +228,7 @@ def init_db(db_name):
                 long_absract TEXT,
                 url TEXT UNIQUE,
                 image_path TEXT,
+                is_sent_to_channel INTEGER DEFAULT 0,
                 FOREIGN KEY (publisher_id) 
                     REFERENCES publisher (publisher_id)
                 )''')
