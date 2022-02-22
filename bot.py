@@ -14,7 +14,7 @@ import config
 import data
 import subscribe
 import whatsnew
-from keyboards.kb_whatsnew import main_menu_keyboard
+from keyboards.kb_whatsnew import main_menu_keyboard,send_to_channel_keyboard
 
 # log_file = os.path.join(config.log_dir, "bot.log")
 # logging.basicConfig(level=logging.INFO, filename=log_file)
@@ -87,16 +87,16 @@ dp.register_message_handler(subscribe.process_period,
                             state=subscribe.BranchStates.select_period)
 
 # отправка сообщений в технический канал
-def send_to_channel(text: str, message_type:str):
+def send_to_channel(text: str, message_type:str, photo_url = None, url=None):
     if message_type == 'text':
         executor.start(dp, send_message(config.chat_id,text))
     elif message_type == 'photo':
-        file_id = executor.start(dp, send_photo(config.chat_id, text))
+        file_id = executor.start(dp, send_photo(config.chat_id,photo_url, text,url))
         return file_id
 
 # получение file_id обложек
-async def send_photo(channel_id: int, url: str):
-    response = await bot.send_photo(channel_id,photo=url)
+async def send_photo(channel_id: int, photo_url: str,text,url):
+    response = await bot.send_photo(channel_id,photo=photo_url, caption=text, reply_markup=send_to_channel_keyboard(url))
     return response['photo'][0]['file_id']
 
 async def send_message(channel_id: int, text: str):

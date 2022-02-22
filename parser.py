@@ -91,14 +91,14 @@ if __name__ == '__main__':
         # получение file_id и перезапись image_url
         for idx,book in enumerate(books):
             try:
-                books[idx][3]= send_to_channel(book[3],'photo')
+                books[idx][3]= send_to_channel(photo_url=book[3],message_type='photo')
             except:
                 # странный баг по Эксмо: при отправке фото в канал какие то падают с ошибкой, тогда подменяю урл фото
-                books[idx][3] = send_to_channel(book[3].replace('410','820'),'photo')
+                books[idx][3] = send_to_channel(photo_url=book[3].replace('410','820'),message_type='photo')
             sleep(4)
         # добавление в бд
         update_count = update_db(config.db_name, books,publisher['publisher_id'] )
         # формирование сообщения
         status_message = check_status(parsed,to_parse, total,update_count,status_message,publisher['name'])
     #отправка в бот
-    send_to_channel(status_message,'text')
+    send_to_channel(text = status_message,message_type='text')

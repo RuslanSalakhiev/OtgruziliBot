@@ -7,7 +7,7 @@ from collections import namedtuple
 
 Book = namedtuple('Book',
                   ['book_id', 'publisher_id', 'title', 'author',
-                   'release_date', 'short_abstract', 'long_absract', 'url', 'image_path','is_sent_to_channel'])
+                   'release_date', 'short_abstract', 'long_absract', 'url', 'image_path','is_sent_to_channel','pub_publisher_id','pub_name','pub_url'])
 
 def get_args():
     parser = argparse.ArgumentParser(description="The module creates and manages the database for OtgruziliBot. \
@@ -48,7 +48,7 @@ def add_book(db_name, title, publisher_id, author=None, release_date=None,
 
 def find_books(db_name, publisher_id=None,
                title=None, author=None,
-               from_date=None, to_date=None):
+               from_date=None, to_date=None, is_sent_to_channel:str = None):
     """Returns all book which meets the given parameters.
     If all parameters are None, all books in the database are returned.
     :param db_name:
@@ -60,19 +60,20 @@ def find_books(db_name, publisher_id=None,
     :return: a sequence of sqlite3.Row dict-like entries
     """
     def build_query():
-        query = "SELECT * FROM book"
+        query = "SELECT * FROM book join publisher on book.publisher_id = publisher.publisher_id"
         vals = build_values()
         if vals:
             query += " WHERE"
             parts = [f" {k}=:{k}" for k in vals if k not in {'from_date', 'to_date'}]
             parts += [" release_date>=:from_date"] if from_date else []
             parts += [" release_date<:to_date"] if to_date else []
+            parts += [" is_sent_to_channel=is_sent_to_channel"] if is_sent_to_channel else []
             query += " AND".join(parts)
         return query
 
     def build_values():
         val = {'publisher_id': publisher_id, 'title': title, 'author': author,
-               'from_date': from_date, 'to_date': to_date}
+               'from_date': from_date, 'to_date': to_date, 'is_sent_to_channel':is_sent_to_channel}
         return dict({(k, v) for k, v in val.items() if v})
 
     with sql.connect(db_name) as con:
@@ -89,6 +90,14 @@ def find_book(db_name, url):
         con.row_factory = sql.Row
         cur = con.cursor()
         cur.execute("SELECT * FROM book WHERE book.url=:book_url", {'book_url': url})
+        return cur.fetchone()
+
+
+def update_is_sent(db_name, url):
+    with sql.connect(db_name) as con:
+        con.row_factory = sql.Row
+        cur = con.cursor()
+        cur.execute("UPDATE book set is_sent_to_channel = 1 WHERE url=:book_url", {'book_url': url})
         return cur.fetchone()
 
 
