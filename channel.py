@@ -18,7 +18,7 @@ def send_to_channel_job():
         sleep(4)
 
 
-schedule.every().day.at("12:00").do(send_to_channel_job)
+schedule.every().day.at("13:15").do(send_to_channel_job)
 
 while True:
     schedule.run_pending()

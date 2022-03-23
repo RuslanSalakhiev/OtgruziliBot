@@ -64,7 +64,7 @@ def find_books(db_name, publisher_id=None,
         vals = build_values()
         if vals:
             query += " WHERE"
-            parts = [f" {k}=:{k}" for k in vals if k not in {'from_date', 'to_date'}]
+            parts = [f" book.{k}=:{k}" for k in vals if k not in {'from_date', 'to_date'}]
             parts += [" release_date>=:from_date"] if from_date else []
             parts += [" release_date<:to_date"] if to_date else []
             parts += [" is_sent_to_channel=is_sent_to_channel"] if is_sent_to_channel else []
