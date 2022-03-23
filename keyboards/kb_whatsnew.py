@@ -74,5 +74,13 @@ def show_book_keyboard(url,previous_step) -> InlineKeyboardMarkup:
     keyboard.row(*navigation_buttons(previous_step))
     return keyboard
 
+def send_to_channel_keyboard(url) -> InlineKeyboardMarkup:
+    buttons = [
+        InlineKeyboardButton(text="На сайт", url=url)
+
+    ]
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    keyboard.add(*buttons)
+    return keyboard
 
 # Subscribe
